@@ -15,7 +15,7 @@ yum install -y git
 * Build 
 ``` shell
 #clone repository
-cd ~ && git clone https://github.infra.cloudera.com/npopa/tera-stuff
+cd ~ && git clone https://github.com/npopa/tera-stuff
 
 #build repository
 export JAVA_HOME=/usr/java/default
