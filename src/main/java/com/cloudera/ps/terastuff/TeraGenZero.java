@@ -281,7 +281,7 @@ public class TeraGenZero extends Configured implements Tool {
     job.setOutputKeyClass(Text.class);
     job.setOutputValueClass(Text.class);
     job.setInputFormatClass(RangeInputFormat.class);
-    job.setOutputFormatClass(NullOutputFormat.class);
+    job.setOutputFormatClass(TeraOutputFormat.class);
     return job.waitForCompletion(true) ? 0 : 1;
   }
 
