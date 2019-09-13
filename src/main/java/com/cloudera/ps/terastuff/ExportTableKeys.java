@@ -101,10 +101,6 @@ public class ExportTableKeys {
       s.setStopRow(Bytes.toBytes(conf.get(TableInputFormat.SCAN_ROW_STOP)));
     }
 
-    boolean raw = Boolean.parseBoolean(conf.get(RAW_SCAN));
-    if (raw) {
-      s.setRaw(raw);
-    }
 
     // Set RowFilter or Prefix Filter if applicable.
     Filter exportFilter = getExportFilter(args);
@@ -113,16 +109,8 @@ public class ExportTableKeys {
       s.setFilter(exportFilter);
     }
 
-    int batching = conf.getInt(EXPORT_BATCHING, -1);
-    if (batching !=  -1){
-      try {
-        s.setBatch(batching);
-      } catch (IncompatibleFilterException e) {
-        LOG.error("Batching could not be set", e);
-      }
-    }
     LOG.info("versions=" + versions + ", starttime=" + startTime +
-      ", endtime=" + endTime + ", keepDeletedCells=" + raw);
+      ", endtime=" + endTime );
     return s;
   }
 
