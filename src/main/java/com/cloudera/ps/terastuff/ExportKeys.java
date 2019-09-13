@@ -34,6 +34,7 @@ import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.*;
 
@@ -51,7 +52,7 @@ public class ExportKeys extends Configured implements Tool {
 	private String keysPath;
 	private String tableName;
     
-	public static class ExportKeysMapper extends Mapper<ImmutableBytesWritable, NullWritable, Text, NullWritable> {
+	public static class ExportKeysMapper extends Mapper<ImmutableBytesWritable, NullWritable, ImmutableBytesWritable, Result> {
 
 		private NullWritable _NULL_ = NullWritable.get();
 		private Text rowText = new Text();
@@ -76,13 +77,12 @@ public class ExportKeys extends Configured implements Tool {
 		@Override
 		public void map(ImmutableBytesWritable row, NullWritable nullValue, Context context)
 				throws IOException, InterruptedException {
-		    rowText.set(Bytes.toString(row.get()));
+		  
             List<Get> gets = new ArrayList<Get>();
             Get get1 = new Get(row.get());
             gets.add(get1);         
-            
-            table.get(gets);		    
-			context.write(rowText, _NULL_);
+      		    
+			context.write(row, table.get(get1));
 		}
 	}
 
@@ -133,9 +133,9 @@ public class ExportKeys extends Configured implements Tool {
 		job.setJarByClass(ExportKeys.class);
 		job.setMapperClass(ExportKeysMapper.class);
 		job.setNumReduceTasks(0);
-		job.setOutputKeyClass(Text.class);
-		job.setOutputValueClass(NullWritable.class);
-		job.setOutputFormatClass(TextOutputFormat.class);
+		job.setOutputFormatClass(SequenceFileOutputFormat.class);
+		job.setOutputKeyClass(ImmutableBytesWritable.class);
+		job.setOutputValueClass(Result.class);
 		return job.waitForCompletion(true) ? 0 : 1;
 
 	}
