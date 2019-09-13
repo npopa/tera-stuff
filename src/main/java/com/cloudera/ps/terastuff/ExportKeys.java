@@ -3,15 +3,12 @@ package com.cloudera.ps.terastuff;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.NavigableMap;
-import java.util.Random;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
-import org.apache.commons.codec.binary.Hex;
 import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
@@ -19,23 +16,19 @@ import org.apache.hadoop.hbase.TableName;
 import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Get;
-import org.apache.hadoop.hbase.client.Put;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.ResultSerialization;
 import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
-import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
-import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.input.FileInputFormat;
 import org.apache.hadoop.mapreduce.lib.input.SequenceFileInputFormat;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
-import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.*;
 
 /*
@@ -51,6 +44,7 @@ public class ExportKeys extends Configured implements Tool {
 	private String outputPath;
 	private String keysPath;
 	private String tableName;
+	boolean shuffle;
     
 	public static class ExportKeysMapper extends Mapper<ImmutableBytesWritable, NullWritable, ImmutableBytesWritable, Result> {
 
@@ -144,7 +138,7 @@ public class ExportKeys extends Configured implements Tool {
 
 		options.addOption("o", "outputPath", true, "outputPath");
 		options.addOption("k", "keysPath", true, "keysPath");
-        options.addOption("t", "tableName", true, "tableName");
+        options.addOption("t", "tableName", true, "tableName");      
 	}
 
 	public boolean parseOptions(String args[]) throws ParseException, IOException {
@@ -166,7 +160,8 @@ public class ExportKeys extends Configured implements Tool {
 
         if (cmd.hasOption("t")) {
           tableName = cmd.getOptionValue("t");
-        }		
+        }	
+        
 		return true;
 	}
 

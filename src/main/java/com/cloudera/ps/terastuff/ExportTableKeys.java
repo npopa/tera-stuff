@@ -1,6 +1,7 @@
 package com.cloudera.ps.terastuff;
 
 import java.io.IOException;
+import java.util.UUID;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -20,20 +21,25 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.hadoop.hbase.mapreduce.TableMapper;
 import org.apache.hadoop.mapreduce.Job;
+import org.apache.hadoop.mapreduce.Reducer;
+import org.apache.hadoop.mapreduce.Reducer.Context;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.*;
 import org.apache.hadoop.io.NullWritable;
+import org.apache.hadoop.io.Text;
 
-public class ExportTableKeys1 extends Configured implements Tool {
-  private static final Log LOG = LogFactory.getLog(ExportTableKeys1.class);
+public class ExportTableKeys extends Configured implements Tool {
+  private static final Log LOG = LogFactory.getLog(ExportTableKeys.class);
   private Options options = new Options();
 
   private String outputPath;
   private static String table_name;
+  private boolean shuffle=false;
 
   public static class ExportKeys1Mapper extends TableMapper<ImmutableBytesWritable, NullWritable> {
     private static NullWritable nullWritable = NullWritable.get();
+
     
     public void map(ImmutableBytesWritable row, Result values, Context context)
         throws IOException, InterruptedException {
@@ -41,7 +47,28 @@ public class ExportTableKeys1 extends Configured implements Tool {
       context.write(row, nullWritable);
     }
   }
+    
+  public static class ExportKeys2Mapper extends TableMapper<Text, ImmutableBytesWritable> {
+    private static Text key = new Text();   
+      public void map(ImmutableBytesWritable row, Result values, Context context)
+          throws IOException, InterruptedException {
+        
+        key.set(UUID.randomUUID().toString());
+        context.write(key, row);
+      }    
+  }
+  
+  public static class ExportKeysReducer extends Reducer<Text, ImmutableBytesWritable, ImmutableBytesWritable, NullWritable> {
+    private static NullWritable nullWritable = NullWritable.get();
 
+    public void reduce(Text key, Iterable<ImmutableBytesWritable> values, Context context)
+        throws IOException, InterruptedException {
+
+      for (ImmutableBytesWritable k : values) {
+        context.write(k, nullWritable);
+      }
+    }
+  }
 
 
   @Override
@@ -69,13 +96,19 @@ public class ExportTableKeys1 extends Configured implements Tool {
     }
     FileOutputFormat.setOutputPath(job, outputDir);
 
-    job.setJarByClass(ExportTableKeys1.class);
+    job.setJarByClass(ExportTableKeys.class);
     Scan scan = new Scan();
     scan.setCacheBlocks(false);
     scan.setFilter(new KeyOnlyFilter());
-    TableMapReduceUtil.initTableMapperJob(tableName, scan, ExportKeys1Mapper.class,
-        ImmutableBytesWritable.class, NullWritable.class, job);
-    job.setNumReduceTasks(0);
+    if (!shuffle){ //map only
+      TableMapReduceUtil.initTableMapperJob(tableName, scan, ExportKeys1Mapper.class,
+          ImmutableBytesWritable.class, NullWritable.class, job);
+      job.setNumReduceTasks(0);
+    } else { //use reducers
+      TableMapReduceUtil.initTableMapperJob(tableName, scan, ExportKeys2Mapper.class,
+          Text.class, ImmutableBytesWritable.class, job); 
+      job.setReducerClass(ExportKeysReducer.class);
+    }
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
     job.setOutputKeyClass(ImmutableBytesWritable.class);
     job.setOutputValueClass(NullWritable.class);    
@@ -87,13 +120,14 @@ public class ExportTableKeys1 extends Configured implements Tool {
 
     options.addOption("o", "outputPath", true, "outputPath");
     options.addOption("t", "tableName", true, "table name ie. table1");
+    options.addOption("s", "shuffle", false, "shuffle");      
 
   }
 
   public boolean parseOptions(String args[]) throws ParseException, IOException {
     if (args.length == 0) {
       HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp("eDisco1Migration", options, true);
+      formatter.printHelp("ExportTableKeys", options, true);
       return false;
     }
     CommandLineParser parser = new PosixParser();
@@ -106,12 +140,17 @@ public class ExportTableKeys1 extends Configured implements Tool {
     if (cmd.hasOption("t")) {
       table_name = cmd.getOptionValue("t");
     }
+    
+    if (cmd.hasOption("s")) {
+      shuffle=true;
+    } 
+    
     return true;
   }
 
 
   public static void main(String[] args) throws Exception {
-    int exitCode = ToolRunner.run(new ExportTableKeys1(), args);
+    int exitCode = ToolRunner.run(new ExportTableKeys(), args);
     System.exit(exitCode);
   }
 }

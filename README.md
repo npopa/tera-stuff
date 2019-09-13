@@ -39,7 +39,7 @@ hbase org.apache.hadoop.hbase.mapreduce.Export \
 
 hdfs dfs -rmr -skipTrash ${KEYS}
 yarn jar ${JAR} \
-   com.cloudera.ps.terastuff.ExportTableKeys1 \
+   com.cloudera.ps.terastuff.ExportTableKeys \
    -Dhbase.client.scanner.caching=100 \
    -Dmapreduce.map.speculative=false \
    -Dmapreduce.reduce.speculative=false \
@@ -48,9 +48,9 @@ yarn jar ${JAR} \
 
 hdfs dfs -rmr -skipTrash ${OUTPUT_RND}
 yarn jar ${JAR} \
-   com.sa.npopa.samples.util.ExportKeys \
+   com.cloudera.ps.terastuff.ExportKeys \
    --keysPath ${KEYS} \
-   --table ${TABLE} \
+   --tableName ${TABLE} \
    --outputPath ${OUTPUT_RND} 
 
    
