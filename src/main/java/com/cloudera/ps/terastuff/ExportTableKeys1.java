@@ -21,6 +21,7 @@ import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.hadoop.hbase.mapreduce.TableMapper;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
+import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.*;
 import org.apache.hadoop.io.NullWritable;
 
@@ -75,6 +76,9 @@ public class ExportTableKeys1 extends Configured implements Tool {
     TableMapReduceUtil.initTableMapperJob(tableName, scan, ExportKeys1Mapper.class,
         ImmutableBytesWritable.class, NullWritable.class, job);
     job.setNumReduceTasks(0);
+    job.setOutputFormatClass(SequenceFileOutputFormat.class);
+    job.setOutputKeyClass(ImmutableBytesWritable.class);
+    job.setOutputValueClass(NullWritable.class);    
     return job.waitForCompletion(true) ? 0 : 1;
 
   }
