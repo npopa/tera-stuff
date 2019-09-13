@@ -21,4 +21,5 @@ cd ~ && git clone https://github.com/npopa/tera-stuff
 export JAVA_HOME=/usr/java/default
 cd ~/tera-stuff && git pull && mvn clean package
 
+
 ```
