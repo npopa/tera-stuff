@@ -27,6 +27,9 @@ hbase org.apache.hadoop.hbase.mapreduce.Export \
    TestTable \
    /tmp/TestTable
 
+export CLASSPATH=${CLASSPATH}:`hadoop classpath`:`hbase mapredcp`:/etc/hbase/conf
+export HADOOP_CLASSPATH=${CLASSPATH}
+
 yarn jar /root/tera-stuff/target/tera-stuff.jar com.cloudera.ps.terastuff.ExportTableKeys \
    -Dhbase.client.scanner.caching=100 \
    -Dmapreduce.map.speculative=false \
