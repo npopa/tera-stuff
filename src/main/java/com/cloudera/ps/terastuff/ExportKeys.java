@@ -112,8 +112,14 @@ public class ExportKeys extends Configured implements Tool {
 		conf.setStrings("io.serializations",
 				new String[] { conf.get("io.serializations"), ResultSerialization.class.getName() });
 	    conf.set("ExportKeys.tableName", tableName);
-		Job job = Job.getInstance(conf);
-		TableMapReduceUtil.addDependencyJars(job);
+        Job job = Job.getInstance(conf);
+        TableMapReduceUtil.addDependencyJars(job);
+
+        // security stuff
+        if (System.getenv("HADOOP_TOKEN_FILE_LOCATION") != null) {
+            conf.set("mapreduce.job.credentials.binary", System.getenv("HADOOP_TOKEN_FILE_LOCATION"));
+        }
+        TableMapReduceUtil.initCredentials(job);
 
 		Path outputDir = new Path(outputPath);
 		Path inputDir = new Path(keysPath);
