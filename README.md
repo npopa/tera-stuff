@@ -43,14 +43,13 @@ yarn jar ${JAR} \
    -Dhbase.client.scanner.caching=100 \
    -Dmapreduce.map.speculative=false \
    -Dmapreduce.reduce.speculative=false \
-    --table ${TABLE} \
+    --tableName ${TABLE} \
     --outputPath ${KEYS}   
-
 
 hdfs dfs -rmr -skipTrash ${OUTPUT_RND}
 yarn jar ${JAR} \
    com.sa.npopa.samples.util.ExportKeys \
-   --inputPath ${KEYS} \
+   --keysPath ${KEYS} \
    --table ${TABLE} \
    --outputPath ${OUTPUT_RND} 
 
