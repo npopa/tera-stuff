@@ -44,7 +44,17 @@
        <groupId>org.apache.hadoop</groupId>
        <artifactId>hadoop-mapreduce-client-app</artifactId>
       <version>${hadoop.version}</version>
-     </dependency>   
+     </dependency>  
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-client</artifactId>
+            <version>${hbase.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.hbase</groupId>
+            <artifactId>hbase-server</artifactId>
+            <version>${hbase.version}</version>
+        </dependency>      
   </dependencies>
   <build>
     <sourceDirectory>src/main/java</sourceDirectory>
