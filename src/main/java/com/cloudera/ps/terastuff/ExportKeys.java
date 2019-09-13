@@ -29,20 +29,6 @@ import org.apache.hadoop.util.*;
 /*
  
 
-export CLASSPATH=`hbase classpath`:$CLASSPATH
-export CLASSPATH=`hadoop classpath`:$CLASSPATH
-export HADOOP_CLASSPATH=$CLASSPATH:$HADOOP_CLASSPATH
-
-export INPUT_PATH=/tmp/t2
-export OUTPUT_PATH=/tmp/output
-
-hdfs dfs -rm -R -skipTrash $OUTPUT_PATH 
-
-yarn jar /home/ec2-user/hbase-samples-0.0.1-SNAPSHOT.jar \
-   com.sa.npopa.samples.util.HBaseExportParser \
-   --inputPath $INPUT_PATH \
-   --outputPath $OUTPUT_PATH 
-
 
 */
 
@@ -53,7 +39,7 @@ public class ExportKeys extends Configured implements Tool {
 	private String outputPath;
 	private String inputPath;
 
-	public static class HBaseExportParserMapper extends Mapper<ImmutableBytesWritable, Result, Text, NullWritable> {
+	public static class ExportKeysMapper extends Mapper<ImmutableBytesWritable, Result, Text, NullWritable> {
 
 		private NullWritable _NULL_ = NullWritable.get();
 		private Text rowText = new Text();
@@ -120,7 +106,7 @@ public class ExportKeys extends Configured implements Tool {
 		FileOutputFormat.setOutputPath(job, outputDir);
 		job.setJobName("HBaseExportParser");
 		job.setJarByClass(ExportKeys.class);
-		job.setMapperClass(HBaseExportParserMapper.class);
+		job.setMapperClass(ExportKeysMapper.class);
 		job.setNumReduceTasks(0);
 		job.setOutputKeyClass(Text.class);
 		job.setOutputValueClass(NullWritable.class);
@@ -133,7 +119,7 @@ public class ExportKeys extends Configured implements Tool {
 
 		options.addOption("o", "outputPath", true, "outputPath");
 		options.addOption("i", "inputPath", true, "inputPath");
-
+        options.addOption("t", "inputPath", true, "inputPath");
 	}
 
 	public boolean parseOptions(String args[]) throws ParseException, IOException {

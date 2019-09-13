@@ -20,21 +20,38 @@ hbase ltt -tn TestTable \
           -num_keys 100000
 
 kinit -kt $(ls -tr /var/run/cloudera-scm-agent/process/*/hbase.keytab|tail -1) hbase/$(hostname -f)          
+
+export CLASSPATH=${CLASSPATH}:`hadoop classpath`:`hbase mapredcp`:/etc/hbase/conf
+export HADOOP_CLASSPATH=${CLASSPATH}
+export TABLE=TestTable
+export KEYS=/tmp/${TABLE}_keys
+export OUTPUT=/tmp/${TABLE}
+export OUTPUT_RND=/tmp/${TABLE}_random_reads
+export JAR=/root/tera-stuff/target/tera-stuff.jar
+
+hdfs dfs -rmr -skipTrash ${OUTPUT}
 hbase org.apache.hadoop.hbase.mapreduce.Export \
    -Dhbase.client.scanner.caching=100 \
    -Dmapreduce.map.speculative=false \
    -Dmapreduce.reduce.speculative=false \
-   TestTable \
-   /tmp/TestTable
+   ${TABLE} \
+   ${OUTPUT}
 
-export CLASSPATH=${CLASSPATH}:`hadoop classpath`:`hbase mapredcp`:/etc/hbase/conf
-export HADOOP_CLASSPATH=${CLASSPATH}
-
-yarn jar /root/tera-stuff/target/tera-stuff.jar com.cloudera.ps.terastuff.ExportTableKeys \
+hdfs dfs -rmr -skipTrash ${KEYS}
+yarn jar ${JAR} \
+   com.cloudera.ps.terastuff.ExportTableKeys1 \
    -Dhbase.client.scanner.caching=100 \
    -Dmapreduce.map.speculative=false \
    -Dmapreduce.reduce.speculative=false \
-   TestTable \
-   /tmp/TestTable_keys   
+    --table ${TABLE} \
+    --outputPath ${KEYS}   
+
+
+hdfs dfs -rmr -skipTrash ${OUTPUT_RND}
+yarn jar ${JAR} \
+   com.sa.npopa.samples.util.ExportKeys \
+   --inputPath ${KEYS} \
+   --table ${TABLE} \
+   --outputPath ${OUTPUT_RND} 
 
    
