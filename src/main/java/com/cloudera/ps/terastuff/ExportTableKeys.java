@@ -100,13 +100,14 @@ public class ExportTableKeys extends Configured implements Tool {
     job.setJarByClass(ExportTableKeys.class);
     Scan scan = new Scan();
     scan.setCacheBlocks(false);
+    
     if(!includeLen){
       scan.setFilter(new KeyOnlyFilter());
     }
     
     if (!shuffle){ //map only
       TableMapReduceUtil.initTableMapperJob(tableName, scan, ExportKeys1Mapper.class,
-          ImmutableBytesWritable.class, NullWritable.class, job);
+          ImmutableBytesWritable.class, LongWritable.class, job);
       //job.setNumReduceTasks(0); //assume this is set externally
     } else { //use reducers
       TableMapReduceUtil.initTableMapperJob(tableName, scan, ExportKeys2Mapper.class,

@@ -20,16 +20,18 @@ hbase ltt -tn TestTable \
           -num_regions_per_server 5\
           -num_keys 100000
 
-kinit -kt $(ls -tr /var/run/cloudera-scm-agent/process/*/hbase.keytab|tail -1) hbase/$(hostname -f)          
 
 export CLASSPATH=${CLASSPATH}:`hadoop classpath`:`hbase mapredcp`:/etc/hbase/conf
 export HADOOP_CLASSPATH=${CLASSPATH}
 export TABLE=TestTable
 export KEYS=/tmp/${TABLE}_keys
 export KEYS_RND=/tmp/${TABLE}_keys_rnd
+export KEYS_SIZE=/tmp/${TABLE}_keys_size
 export OUTPUT=/tmp/${TABLE}
 export OUTPUT_RND=/tmp/${TABLE}_random_reads
 export JAR=/root/tera-stuff/target/tera-stuff.jar
+kinit -kt $(ls -tr /var/run/cloudera-scm-agent/process/*/hbase.keytab|tail -1) hbase/$(hostname -f)          
+
 
 ####regular table export
 hdfs dfs -rmr -skipTrash ${OUTPUT}
@@ -47,7 +49,7 @@ yarn jar ${JAR} \
    -Dhbase.client.scanner.caching=100 \
    -Dmapreduce.map.speculative=false \
    -Dmapreduce.reduce.speculative=false \
-   -Dmapreduce.job.reduces=0 \   
+   -Dmapreduce.job.reduces=0 \
     --tableName ${TABLE} \
     --outputPath ${KEYS}   
 
@@ -71,7 +73,7 @@ yarn jar ${JAR} \
    -Dhbase.client.scanner.caching=100 \
    -Dmapreduce.map.speculative=false \
    -Dmapreduce.reduce.speculative=false \
-   -Dmapreduce.job.reduces=1 \   
+   -Dmapreduce.job.reduces=1 \
     --tableName ${TABLE} \
     --outputPath ${KEYS} \
     --includeRowSize
