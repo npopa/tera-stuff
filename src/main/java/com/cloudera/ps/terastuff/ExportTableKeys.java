@@ -40,17 +40,30 @@ public class ExportTableKeys extends Configured implements Tool {
 
   public static class ExportKeys1Mapper extends TableMapper<ImmutableBytesWritable, LongWritable> {
     private static LongWritable recordSize = new LongWritable(0);
+    public static enum Counters {
+      ROWS, 
+      SIZE
+    }    
 
     
     public void map(ImmutableBytesWritable row, Result record, Context context)
         throws IOException, InterruptedException {
-      recordSize.set(Result.getTotalSizeOfCells(record));
+      
+      long size=Result.getTotalSizeOfCells(record);
+      recordSize.set(size);
+      
       context.write(row, recordSize);
+      
+      context.getCounter(Counters.ROWS).increment(1);
+      context.getCounter(Counters.SIZE).increment(size);
+      
+      
     }
   }
     
   public static class ExportKeys2Mapper extends TableMapper<Text, ImmutableBytesWritable> {
     private static Text key = new Text();   
+    
       public void map(ImmutableBytesWritable row, Result record, Context context)
           throws IOException, InterruptedException {
         
@@ -61,12 +74,17 @@ public class ExportTableKeys extends Configured implements Tool {
   
   public static class ExportKeysReducer extends Reducer<Text, ImmutableBytesWritable, ImmutableBytesWritable, LongWritable> {
     private static LongWritable recordSize = new LongWritable(0);
-
+    public static enum Counters {
+      ROWS, 
+      SIZE
+    } 
     public void reduce(Text key, Iterable<ImmutableBytesWritable> values, Context context)
         throws IOException, InterruptedException {
 
       for (ImmutableBytesWritable k : values) {
         context.write(k, recordSize);
+        context.getCounter(Counters.ROWS).increment(1);
+        context.getCounter(Counters.SIZE).increment(recordSize.get());        
       }
     }
   }

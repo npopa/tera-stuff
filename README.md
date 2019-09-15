@@ -75,7 +75,7 @@ yarn jar ${JAR} \
    -Dmapreduce.reduce.speculative=false \
    -Dmapreduce.job.reduces=1 \
     --tableName ${TABLE} \
-    --outputPath ${KEYS} \
+    --outputPath ${KEYS_SIZE} \
     --includeRowSize
 
 ####Export the table using gets rather than scan. Use the --keysPath as input for the keys to be exported.
