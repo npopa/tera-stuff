@@ -22,10 +22,10 @@ import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.hadoop.hbase.mapreduce.TableMapper;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.Reducer.Context;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.*;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 
@@ -36,21 +36,22 @@ public class ExportTableKeys extends Configured implements Tool {
   private String outputPath;
   private static String table_name;
   private boolean shuffle=false;
+  private boolean includeLen=false;  
 
-  public static class ExportKeys1Mapper extends TableMapper<ImmutableBytesWritable, NullWritable> {
-    private static NullWritable nullWritable = NullWritable.get();
+  public static class ExportKeys1Mapper extends TableMapper<ImmutableBytesWritable, LongWritable> {
+    private static LongWritable recordSize = new LongWritable(0);
 
     
-    public void map(ImmutableBytesWritable row, Result values, Context context)
+    public void map(ImmutableBytesWritable row, Result record, Context context)
         throws IOException, InterruptedException {
-
-      context.write(row, nullWritable);
+      recordSize.set(Result.getTotalSizeOfCells(record));
+      context.write(row, recordSize);
     }
   }
     
   public static class ExportKeys2Mapper extends TableMapper<Text, ImmutableBytesWritable> {
     private static Text key = new Text();   
-      public void map(ImmutableBytesWritable row, Result values, Context context)
+      public void map(ImmutableBytesWritable row, Result record, Context context)
           throws IOException, InterruptedException {
         
         key.set(UUID.randomUUID().toString());
@@ -58,14 +59,14 @@ public class ExportTableKeys extends Configured implements Tool {
       }    
   }
   
-  public static class ExportKeysReducer extends Reducer<Text, ImmutableBytesWritable, ImmutableBytesWritable, NullWritable> {
-    private static NullWritable nullWritable = NullWritable.get();
+  public static class ExportKeysReducer extends Reducer<Text, ImmutableBytesWritable, ImmutableBytesWritable, LongWritable> {
+    private static LongWritable recordSize = new LongWritable(0);
 
     public void reduce(Text key, Iterable<ImmutableBytesWritable> values, Context context)
         throws IOException, InterruptedException {
 
       for (ImmutableBytesWritable k : values) {
-        context.write(k, nullWritable);
+        context.write(k, recordSize);
       }
     }
   }
@@ -99,7 +100,9 @@ public class ExportTableKeys extends Configured implements Tool {
     job.setJarByClass(ExportTableKeys.class);
     Scan scan = new Scan();
     scan.setCacheBlocks(false);
-    scan.setFilter(new KeyOnlyFilter());
+    if(!includeLen){
+      scan.setFilter(new KeyOnlyFilter());
+    }
     if (!shuffle){ //map only
       TableMapReduceUtil.initTableMapperJob(tableName, scan, ExportKeys1Mapper.class,
           ImmutableBytesWritable.class, NullWritable.class, job);
@@ -111,7 +114,7 @@ public class ExportTableKeys extends Configured implements Tool {
     }
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
     job.setOutputKeyClass(ImmutableBytesWritable.class);
-    job.setOutputValueClass(NullWritable.class);    
+    job.setOutputValueClass(LongWritable.class);    
     return job.waitForCompletion(true) ? 0 : 1;
 
   }
@@ -120,7 +123,8 @@ public class ExportTableKeys extends Configured implements Tool {
 
     options.addOption("o", "outputPath", true, "outputPath");
     options.addOption("t", "tableName", true, "table name ie. table1");
-    options.addOption("s", "shuffle", false, "shuffle");      
+    options.addOption("s", "shuffle", false, "shuffle");
+    options.addOption("l", "includeRowSize", false, "include row size."); 
 
   }
 
@@ -144,6 +148,10 @@ public class ExportTableKeys extends Configured implements Tool {
     if (cmd.hasOption("s")) {
       shuffle=true;
     } 
+    
+    if (cmd.hasOption("l")) {
+      includeLen=true;
+    }    
     
     return true;
   }
