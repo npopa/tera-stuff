@@ -78,6 +78,8 @@ public class ExportTableKeys extends Configured implements Tool {
         skip=false;
       } else if(rand.nextInt(100) > sp){
         skip=true;
+      } else {
+        skip=false;
       }
       
       if (!skip){
@@ -124,6 +126,8 @@ public class ExportTableKeys extends Configured implements Tool {
           skip=false;
         } else if(rand.nextInt(100) > sp){
           skip=true;
+        } else {
+          skip=false;
         }
         
         if (!skip){
