@@ -49,7 +49,7 @@ yarn jar ${JAR} \
    -Dhbase.client.scanner.caching=100 \
    -Dmapreduce.map.speculative=false \
    -Dmapreduce.reduce.speculative=false \
-   -Dmapreduce.job.reduces=0 \
+   -Dmapreduce.job.reduces=1 \
     --tableName ${TABLE} \
     --outputPath ${KEYS}   
 
@@ -63,11 +63,12 @@ yarn jar ${JAR} \
    -Dmapreduce.job.reduces=10 \
     --tableName ${TABLE} \
     --outputPath ${KEYS_RND} \
-    --shuffle
+    --shuffle \
+    --sample 10
 
 ####export table keys and the row sizes. Generate ony one file. 
 ####This can be used to analyze the table later.
-hdfs dfs -rmr -skipTrash ${KEYS}
+hdfs dfs -rmr -skipTrash ${KEYS_SIZE}
 yarn jar ${JAR} \
    com.cloudera.ps.terastuff.ExportTableKeys \
    -Dhbase.client.scanner.caching=100 \

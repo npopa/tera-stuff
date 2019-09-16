@@ -21,6 +21,7 @@ import org.apache.hadoop.hbase.client.Table;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.ResultSerialization;
 import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
+import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.NullWritable;
 import org.apache.hadoop.io.Text;
 import org.apache.hadoop.mapreduce.Job;
@@ -46,9 +47,8 @@ public class ExportKeys extends Configured implements Tool {
 	private String tableName;
 	boolean shuffle;
     
-	public static class ExportKeysMapper extends Mapper<ImmutableBytesWritable, NullWritable, ImmutableBytesWritable, Result> {
+	public static class ExportKeysMapper extends Mapper<ImmutableBytesWritable, LongWritable, ImmutableBytesWritable, Result> {
 
-		private NullWritable _NULL_ = NullWritable.get();
 		private Text rowText = new Text();
 
 	        private Connection connection = null;
@@ -69,7 +69,7 @@ public class ExportKeys extends Configured implements Tool {
 	        }
 		
 		@Override
-		public void map(ImmutableBytesWritable row, NullWritable nullValue, Context context)
+		public void map(ImmutableBytesWritable row, LongWritable longValue, Context context)
 				throws IOException, InterruptedException {
 		  
             List<Get> gets = new ArrayList<Get>();
