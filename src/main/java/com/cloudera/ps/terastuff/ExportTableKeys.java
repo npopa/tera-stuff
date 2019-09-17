@@ -39,6 +39,7 @@ public class ExportTableKeys extends Configured implements Tool {
   private static String table_name;
   private boolean shuffle=false;
   private boolean includeLen=false;
+  private boolean useCache=false;
   private String samplePercent="100";
 
   public static class ExportKeys1Mapper extends TableMapper<ImmutableBytesWritable, LongWritable> {
@@ -191,7 +192,7 @@ public class ExportTableKeys extends Configured implements Tool {
 
     job.setJarByClass(ExportTableKeys.class);
     Scan scan = new Scan();
-    scan.setCacheBlocks(false);
+    scan.setCacheBlocks(useCache);
     
     if(!includeLen){
       scan.setFilter(new KeyOnlyFilter());
@@ -219,6 +220,7 @@ public class ExportTableKeys extends Configured implements Tool {
     options.addOption("t", "tableName", true, "table name ie. table1");
     options.addOption("s", "shuffle", false, "shuffle");
     options.addOption("l", "includeRowSize", false, "include row size.");
+    options.addOption("c", "cache", false, "use cache.");    
     options.addOption("p", "sample", true, "export a just a percentage instead of all rows.");
 
   }
@@ -250,6 +252,10 @@ public class ExportTableKeys extends Configured implements Tool {
     
     if (cmd.hasOption("p")) {
       samplePercent = cmd.getOptionValue("p");
+    } 
+
+    if (cmd.hasOption("c")) {
+      useCache=true;
     } 
     
     return true;
