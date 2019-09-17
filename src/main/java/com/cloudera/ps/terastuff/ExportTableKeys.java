@@ -182,7 +182,7 @@ public class ExportTableKeys extends Configured implements Tool {
 
     final TableName tableName = TableName.valueOf(table_name);
 
-    Job job = Job.getInstance(conf, "Export from table " + table_name + " into file " + outputPath);
+    Job job = Job.getInstance(conf, "Export keys from table " + table_name + " into file " + outputPath);
 
     Path outputDir = new Path(outputPath);
     if (outputDir.getFileSystem(getConf()).exists(outputDir)) {
