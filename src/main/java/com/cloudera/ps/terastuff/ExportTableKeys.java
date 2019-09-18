@@ -47,7 +47,8 @@ public class ExportTableKeys extends Configured implements Tool {
     private static LongWritable recordSize = new LongWritable(0);
     private long sp=0;
     private long sc=0;
-    private long count=0;    
+    private long count=0;  
+    private long size=0; 
     private boolean includeLen=false;
     private boolean skip=false;
     private Random rand = new Random();
@@ -76,7 +77,7 @@ public class ExportTableKeys extends Configured implements Tool {
     public void map(ImmutableBytesWritable row, Result record, Context context)
         throws IOException, InterruptedException {
       
-      long size=Result.getTotalSizeOfCells(record);
+      size+=Result.getTotalSizeOfCells(record);
       if (includeLen) {
         recordSize.set(size);
       }
@@ -114,7 +115,6 @@ public class ExportTableKeys extends Configured implements Tool {
     private long sp=0;
     private long sc=0;
     private long count=0;
-    private boolean includeLen=false;
     private boolean skip=false;
     private Random rand = new Random();
     public static enum Counters {
@@ -128,7 +128,6 @@ public class ExportTableKeys extends Configured implements Tool {
         String tableName = conf.get("ExportKeys.tableName");
         sp=conf.getLong("ExportKeys.samplePercent", 0);
         sc=conf.getLong("ExportKeys.sampleCount", 0);       
-        includeLen=conf.getBoolean("ExportKeys.includeLen", false);
         
         LOG.info("ExportKeys.samplePercent="+sp);
         LOG.info("ExportKeys.sampleCount="+sc);       
