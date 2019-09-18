@@ -1,6 +1,9 @@
 package com.cloudera.ps.terastuff;
 
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Iterator;
+import java.util.TreeMap;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -68,6 +71,7 @@ public class CalculateSplits extends Configured implements Tool {
     HBaseConfiguration.merge(conf, HBaseConfiguration.create(conf));
     
     long recordCount;
+    HashMap<ImmutableBytesWritable, String> hm=new HashMap<ImmutableBytesWritable, String>();  
 
     try {
       FileSystem fs = FileSystem.get(conf);
@@ -100,7 +104,8 @@ public class CalculateSplits extends Configured implements Tool {
           }
           size=value.get();
           lastKey.set(key.get());
-          System.out.println(inFile.getName() + " "+firstKey+" -- "+lastKey+" size:"+size+" count:"+count);          
+          hm.put(firstKey, inFile.getName());
+          //System.out.println(inFile.getName() + " "+firstKey+" -- "+lastKey+" size:"+size+" count:"+count);          
           
         } finally {
           if (reader != null) {
@@ -112,6 +117,16 @@ public class CalculateSplits extends Configured implements Tool {
       // TODO Auto-generated catch bloc
       e.printStackTrace();
     }
+    
+    TreeMap<ImmutableBytesWritable, String> sorted = new TreeMap<>();
+    sorted.putAll(hm);
+    
+    Iterator itr=sorted.keySet().iterator();               
+    while(itr.hasNext())    
+    {    
+      ImmutableBytesWritable key=(ImmutableBytesWritable)itr.next();  
+      System.out.println("Key: "+key+" file:   "+hm.get(key));  
+    }  
     return 0;
 
   }
