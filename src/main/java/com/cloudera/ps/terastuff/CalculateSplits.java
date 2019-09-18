@@ -98,7 +98,7 @@ public class CalculateSplits extends Configured implements Tool {
             count+=1;
             size+=value.get();
           }
-          System.out.println(inFile.getName() + ""+firstKey+"--"+key+" size:"+size+" count:"+count);          
+          System.out.println(inFile.getName() + " "+firstKey+"--"+key+" size:"+size+" count:"+count);          
           
         } finally {
           if (reader != null) {

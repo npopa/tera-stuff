@@ -41,10 +41,13 @@ public class ExportTableKeys extends Configured implements Tool {
   private boolean includeLen=false;
   private boolean useCache=false;
   private String samplePercent="100";
+  private String sampleCount="1000";
 
   public static class ExportKeys1Mapper extends TableMapper<ImmutableBytesWritable, LongWritable> {
     private static LongWritable recordSize = new LongWritable(0);
     private long sp=100;
+    private long sc=1000;
+    private long count=0;    
     private boolean includeLen=false;
     private boolean skip=false;
     private Random rand = new Random();
@@ -57,7 +60,8 @@ public class ExportTableKeys extends Configured implements Tool {
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
         String tableName = conf.get("ExportKeys.tableName");
-        sp=conf.getLong("ExportKeys.samplePercent", 100);
+        sp=conf.getLong("ExportKeys.samplePercent", 0);
+        sc=conf.getLong("ExportKeys.sampleCount", 0);
         includeLen=conf.getBoolean("ExportKeys.includeLen", false);
 
     }
@@ -75,12 +79,18 @@ public class ExportTableKeys extends Configured implements Tool {
         recordSize.set(size);
       }
       
-      if (sp>=100){
-        skip=false;
-      } else if(rand.nextInt(100) > sp){
-        skip=true;
-      } else {
-        skip=false;
+      if (sp>0){ //skip by percentage
+        if(rand.nextInt(100) > sp){
+            skip=true;
+            } else {
+            skip=false;
+            }
+      } else if (sc>0){ //skip by count
+        if(count%sc!=0){
+            skip=true;
+            } else {
+            skip=false;
+            }
       }
       
       if (!skip){
@@ -97,7 +107,9 @@ public class ExportTableKeys extends Configured implements Tool {
   public static class ExportKeys2Mapper extends TableMapper<Text, ImmutableBytesWritable> {
     private static Text key = new Text();   
     private static LongWritable recordSize = new LongWritable(0);
-    private long sp=100;
+    private long sp=0;
+    private long sc=0;
+    private long count=0;
     private boolean includeLen=false;
     private boolean skip=false;
     private Random rand = new Random();
@@ -110,8 +122,10 @@ public class ExportTableKeys extends Configured implements Tool {
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
         String tableName = conf.get("ExportKeys.tableName");
-        sp=conf.getLong("ExportKeys.samplePercent", 100);
+        sp=conf.getLong("ExportKeys.samplePercent", 0);
+        sc=conf.getLong("ExportKeys.sampleCount", 0);       
         includeLen=conf.getBoolean("ExportKeys.includeLen", false);
+        
 
     }
 
@@ -122,15 +136,23 @@ public class ExportTableKeys extends Configured implements Tool {
     
       public void map(ImmutableBytesWritable row, Result record, Context context)
           throws IOException, InterruptedException {
-
-        if (sp>=100){
-          skip=false;
-        } else if(rand.nextInt(100) > sp){
-          skip=true;
-        } else {
-          skip=false;
-        }
         
+
+        
+        if (sp>0){ //skip by percentage
+          if(rand.nextInt(100) > sp){
+              skip=true;
+              } else {
+              skip=false;
+              }
+        } else if (sc>0){ //skip by count
+          if(count%sc!=0){
+              skip=true;
+              } else {
+              skip=false;
+              }
+        }
+            
         if (!skip){
           key.set(UUID.randomUUID().toString());
           context.write(key, row);
@@ -138,6 +160,8 @@ public class ExportTableKeys extends Configured implements Tool {
           context.getCounter(Counters.ROWS).increment(1);
         }
         
+        skip=false;
+        count+=1;       
 
       }    
   }
@@ -178,6 +202,7 @@ public class ExportTableKeys extends Configured implements Tool {
     conf.setBoolean("ExportKeys.shuffle", shuffle);
     conf.setBoolean("ExportKeys.includeLen", includeLen);
     conf.set("ExportKeys.samplePercent", samplePercent);
+    conf.set("ExportKeys.sampleCount", sampleCount);
     
 
     final TableName tableName = TableName.valueOf(table_name);
@@ -221,7 +246,8 @@ public class ExportTableKeys extends Configured implements Tool {
     options.addOption("s", "shuffle", false, "shuffle");
     options.addOption("l", "includeRowSize", false, "include row size.");
     options.addOption("c", "cache", false, "use cache.");    
-    options.addOption("p", "sample", true, "export a just a percentage instead of all rows.");
+    options.addOption("p", "samplePercent", true, "export a just a sample percentage instead of all rows.");
+    options.addOption("r", "sampleCount", true, "export a just a sample record every few records instead of all rows.");    
 
   }
 
@@ -254,6 +280,10 @@ public class ExportTableKeys extends Configured implements Tool {
       samplePercent = cmd.getOptionValue("p");
     } 
 
+    if (cmd.hasOption("r")) {
+      sampleCount = cmd.getOptionValue("r");
+    } 
+    
     if (cmd.hasOption("c")) {
       useCache=true;
     } 
