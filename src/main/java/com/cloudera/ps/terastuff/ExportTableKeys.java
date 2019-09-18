@@ -40,13 +40,13 @@ public class ExportTableKeys extends Configured implements Tool {
   private boolean shuffle=false;
   private boolean includeLen=false;
   private boolean useCache=false;
-  private String samplePercent="100";
-  private String sampleCount="1000";
+  private String samplePercent="0";
+  private String sampleCount="0";
 
   public static class ExportKeys1Mapper extends TableMapper<ImmutableBytesWritable, LongWritable> {
     private static LongWritable recordSize = new LongWritable(0);
-    private long sp=100;
-    private long sc=1000;
+    private long sp=0;
+    private long sc=0;
     private long count=0;    
     private boolean includeLen=false;
     private boolean skip=false;

@@ -118,4 +118,12 @@ public class CalculateSplits extends Configured implements Tool {
     int exitCode = ToolRunner.run(new CalculateSplits(), args);
     System.exit(exitCode);
   }
+  
+  public class Splits{
+    ImmutableBytesWritable startKey;
+    ImmutableBytesWritable endKey;
+    long keyCount;
+    long size;
+  }
+  
 }
