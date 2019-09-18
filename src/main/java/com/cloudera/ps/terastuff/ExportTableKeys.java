@@ -86,7 +86,7 @@ public class ExportTableKeys extends Configured implements Tool {
             skip=false;
             }
       } else if (sc>0){ //skip by count
-        if(count%sc!=0){
+        if((count % sc) != 0){
             skip=true;
             } else {
             skip=false;
@@ -146,7 +146,7 @@ public class ExportTableKeys extends Configured implements Tool {
               skip=false;
               }
         } else if (sc>0){ //skip by count
-          if(count%sc!=0){
+          if((count % sc) != 0){
               skip=true;
               } else {
               skip=false;
