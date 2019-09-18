@@ -63,7 +63,9 @@ public class ExportTableKeys extends Configured implements Tool {
         sp=conf.getLong("ExportKeys.samplePercent", 0);
         sc=conf.getLong("ExportKeys.sampleCount", 0);
         includeLen=conf.getBoolean("ExportKeys.includeLen", false);
-
+        
+        LOG.info("ExportKeys.samplePercent="+sp);
+        LOG.info("ExportKeys.sampleCount="+sc);    
     }
 
     @Override
@@ -100,6 +102,8 @@ public class ExportTableKeys extends Configured implements Tool {
         context.getCounter(Counters.SIZE).increment(size);
       }
       
+      skip=false;
+      count+=1;         
       
     }
   }
@@ -126,6 +130,8 @@ public class ExportTableKeys extends Configured implements Tool {
         sc=conf.getLong("ExportKeys.sampleCount", 0);       
         includeLen=conf.getBoolean("ExportKeys.includeLen", false);
         
+        LOG.info("ExportKeys.samplePercent="+sp);
+        LOG.info("ExportKeys.sampleCount="+sc);       
 
     }
 
