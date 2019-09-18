@@ -79,6 +79,10 @@ public class CalculateSplits extends Configured implements Tool {
         LocatedFileStatus fileStatus = fileStatusListIterator.next();
 
         Path inFile = fileStatus.getPath();
+        if(inFile.getName().startsWith("_")) {
+          continue;
+        }       
+        
         SequenceFile.Reader reader = null;
         try {
           ImmutableBytesWritable key = new ImmutableBytesWritable();
