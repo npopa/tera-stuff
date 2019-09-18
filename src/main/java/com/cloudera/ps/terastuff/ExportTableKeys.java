@@ -201,7 +201,7 @@ public class ExportTableKeys extends Configured implements Tool {
     if (!shuffle){ //map only
       TableMapReduceUtil.initTableMapperJob(tableName, scan, ExportKeys1Mapper.class,
           ImmutableBytesWritable.class, LongWritable.class, job);
-      //job.setNumReduceTasks(0); //assume this is set externally
+      //job.setNumReduceTasks(0); //assume this is set externally for now
     } else { //use reducers
       TableMapReduceUtil.initTableMapperJob(tableName, scan, ExportKeys2Mapper.class,
           Text.class, ImmutableBytesWritable.class, job); 

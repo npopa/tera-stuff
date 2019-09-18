@@ -79,6 +79,20 @@ yarn jar ${JAR} \
     --outputPath ${KEYS_SIZE} \
     --includeRowSize
 
+
+####export table keys and the row sizes.
+####This can be used to analyze the table later.
+hdfs dfs -rmr -skipTrash ${KEYS_SIZE}
+yarn jar ${JAR} \
+   com.cloudera.ps.terastuff.ExportTableKeys \
+   -Dhbase.client.scanner.caching=100 \
+   -Dmapreduce.map.speculative=false \
+   -Dmapreduce.reduce.speculative=false \
+   -Dmapreduce.job.reduces=0 \
+    --tableName ${TABLE} \
+    --outputPath ${KEYS_SIZE} \
+    --includeRowSize
+
 ####Export the table using gets rather than scan. Use the --keysPath as input for the keys to be exported.
 hdfs dfs -rmr -skipTrash ${OUTPUT_RND}
 yarn jar ${JAR} \
