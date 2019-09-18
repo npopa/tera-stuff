@@ -90,13 +90,15 @@ public class CalculateSplits extends Configured implements Tool {
           reader = new SequenceFile.Reader(conf, Reader.file(inFile), Reader.bufferSize(4096));
           ImmutableBytesWritable firstKey= new ImmutableBytesWritable();
           long size=0;
+          long count=0;
           while (reader.next(key, value)) {
-            if(size==0){
+            if(count==0){
               firstKey=key;
             }
+            count+=1;
             size+=value.get();
           }
-          System.out.println("File:" + inFile.getName() + " first:"+firstKey+" last:"+key+" size:"+size);          
+          System.out.println(inFile.getName() + ""+firstKey+"--"+key+" size:"+size+" count:"+count);          
           
         } finally {
           if (reader != null) {
