@@ -10,6 +10,8 @@ import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
 import org.apache.commons.cli.PosixParser;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.apache.hadoop.conf.Configuration;
 import org.apache.hadoop.conf.Configured;
 import org.apache.hadoop.fs.FileSystem;
@@ -26,19 +28,26 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 public class CalculateSplits extends Configured implements Tool {
+  private static final Log LOG = LogFactory.getLog(CalculateSplits.class);
   private Options options = new Options();
   private String keysPath;
+  private long splits=0;
+  private boolean bySize=false;  
+  private boolean byCount=false;   
 
   private void init() {
 
     options.addOption("k", "keysPath", true, "keysPath");
+    options.addOption("c", "byCount", false, "split by record count");  
+    options.addOption("z", "bySize", false, "split by size"); 
+    options.addOption("s", "splits", true, "number of splits");     
     options.addOption("t", "tableName", true, "tableName");
   }
 
   public boolean parseOptions(String args[]) throws ParseException, IOException {
     if (args.length == 0) {
       HelpFormatter formatter = new HelpFormatter();
-      formatter.printHelp("HBaseExportParser", options, true);
+      formatter.printHelp("CalculateSplits", options, true);
       return false;
     }
     CommandLineParser parser = new PosixParser();
@@ -48,8 +57,19 @@ public class CalculateSplits extends Configured implements Tool {
     if (cmd.hasOption("k")) {
       keysPath = cmd.getOptionValue("k");
     }
+    
+    if (cmd.hasOption("s")) {
+      splits = Long.parseLong(cmd.getOptionValue("s"));
+    }
 
-
+    if (cmd.hasOption("z")) {
+      bySize=true;
+    }
+ 
+    if (cmd.hasOption("c")) {
+      byCount=true;
+    }
+    
     return true;
   }
 
@@ -70,12 +90,13 @@ public class CalculateSplits extends Configured implements Tool {
     Configuration conf = getConf();
     HBaseConfiguration.merge(conf, HBaseConfiguration.create(conf));
     
-    long recordCount;
+    long sizeTotal=0;
+    long countTotal=0;
     HashMap<ImmutableBytesWritable, String> hm=new HashMap<ImmutableBytesWritable, String>();  
 
     try {
       FileSystem fs = FileSystem.get(conf);
-
+      LOG.info("Reading keys from "+keysPath);
       // the second boolean parameter here sets the recursion to true
       RemoteIterator<LocatedFileStatus> fileStatusListIterator =
           fs.listFiles(new Path(keysPath), false);
@@ -105,8 +126,8 @@ public class CalculateSplits extends Configured implements Tool {
           size=value.get();
           lastKey.set(key.get());
           hm.put(firstKey, inFile.getName());
-          //System.out.println(inFile.getName() + " "+firstKey+" -- "+lastKey+" size:"+size+" count:"+count);          
-          
+          countTotal+=count;
+          sizeTotal+=size;
         } finally {
           if (reader != null) {
             reader.close();
@@ -117,10 +138,13 @@ public class CalculateSplits extends Configured implements Tool {
       // TODO Auto-generated catch bloc
       e.printStackTrace();
     }
-    
+    LOG.info("Total sample keys:" + countTotal); 
+    LOG.info("Total approximate size:" + sizeTotal);     
+    LOG.info("Sorting based of the first key from each file.");    
     TreeMap<ImmutableBytesWritable, String> sorted = new TreeMap<>();
     sorted.putAll(hm);
-    
+
+    LOG.info("Computing splits:" + (countTotal/splits));    
     Iterator itr=sorted.keySet().iterator();               
     while(itr.hasNext())    
     {    
