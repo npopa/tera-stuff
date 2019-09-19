@@ -31,7 +31,7 @@ public class CalculateSplits extends Configured implements Tool {
   private static final Log LOG = LogFactory.getLog(CalculateSplits.class);
   private Options options = new Options();
   private String keysPath;
-  private long splitsTotal=0;
+  private long regions=0;
   private boolean bySize=false;  
   private boolean byCount=false;   
 
@@ -40,7 +40,7 @@ public class CalculateSplits extends Configured implements Tool {
     options.addOption("k", "keysPath", true, "keysPath");
     options.addOption("c", "byCount", false, "split by record count");  
     options.addOption("z", "bySize", false, "split by size"); 
-    options.addOption("s", "splitsTotal", true, "number of splits");     
+    options.addOption("r", "regions", true, "number of regions");     
     options.addOption("t", "tableName", true, "tableName");
   }
 
@@ -59,7 +59,7 @@ public class CalculateSplits extends Configured implements Tool {
     }
     
     if (cmd.hasOption("s")) {
-      splitsTotal = Long.parseLong(cmd.getOptionValue("s"));
+      regions = Long.parseLong(cmd.getOptionValue("s"));
     }
 
     if (cmd.hasOption("z")) {
@@ -143,8 +143,8 @@ public class CalculateSplits extends Configured implements Tool {
     LOG.info("Sorting based of the first key from each file.");    
     TreeMap<ImmutableBytesWritable, String> sorted = new TreeMap<>();
     sorted.putAll(hm);
-    long splitCount=(countTotal/splitsTotal);
-    long splitSize=(sizeTotal/splitsTotal);
+    long splitCount=(countTotal/regions);
+    long splitSize=(sizeTotal/regions);
     long splits=1;
     LOG.info("Should have a split every:" + splitCount + " samples." );    
     Iterator<ImmutableBytesWritable> itr=sorted.keySet().iterator();
@@ -162,12 +162,12 @@ public class CalculateSplits extends Configured implements Tool {
         LongWritable value = new LongWritable();          
 
         while (reader.next(rowkey, value)) {
-          System.out.println("  Sample: "+rowkey); 
+          LOG.info("  Sample: "+rowkey); 
           if (count<splitCount){
             count+=1;
           } else {
             
-            System.out.println("--> Split +"+splits+" at:"+rowkey);
+            LOG.info("--> Split "+ String.format("%03d", splits)+" at:"+rowkey);
             splits+=1;
             count=0;
           }
