@@ -19,7 +19,14 @@ import org.apache.hadoop.fs.LocatedFileStatus;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.fs.RemoteIterator;
 import org.apache.hadoop.hbase.HBaseConfiguration;
+import org.apache.hadoop.hbase.HColumnDescriptor;
+import org.apache.hadoop.hbase.HTableDescriptor;
+import org.apache.hadoop.hbase.TableName;
+import org.apache.hadoop.hbase.client.Admin;
+import org.apache.hadoop.hbase.client.Connection;
+import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.util.Bytes;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Reader;
@@ -31,6 +38,8 @@ public class CalculateSplits extends Configured implements Tool {
   private static final Log LOG = LogFactory.getLog(CalculateSplits.class);
   private Options options = new Options();
   private String keysPath;
+  private String families;
+  private String tableName;
   private long regions=0;
   private boolean bySize=false;  
   private boolean byCount=false;   
@@ -42,6 +51,7 @@ public class CalculateSplits extends Configured implements Tool {
     options.addOption("z", "bySize", false, "split by size"); 
     options.addOption("r", "regions", true, "number of regions");     
     options.addOption("t", "tableName", true, "tableName");
+    options.addOption("f", "families", true, "column families to create f1:f2:f3 etc.");
   }
 
   public boolean parseOptions(String args[]) throws ParseException, IOException {
@@ -70,6 +80,13 @@ public class CalculateSplits extends Configured implements Tool {
       byCount=true;
     }
     
+    if (cmd.hasOption("t")) {
+      tableName = cmd.getOptionValue("t");
+    }
+
+    if (cmd.hasOption("f")) {
+      families = cmd.getOptionValue("f");
+    }
     return true;
   }
 
@@ -148,6 +165,8 @@ public class CalculateSplits extends Configured implements Tool {
     long splits=0;
     LOG.info("Should have a split every:" + splitCount + " samples." );    
     Iterator<ImmutableBytesWritable> itr=sorted.keySet().iterator();
+    
+    byte[][] splitKeys = new byte[(int)regions][];
 
     long size=0;
     long count=0;
@@ -166,8 +185,9 @@ public class CalculateSplits extends Configured implements Tool {
           //LOG.info("Sample: "+rowkey); 
           count+=1;
           if ((count%splitCount)==0){
+            splitKeys[(int)splits]=rowkey.get();
             splits+=1;
-            LOG.info("--> Split "+ String.format("%04d", splits)+" at:"+rowkey);
+            LOG.info("--> Split "+ String.format("%04d", splits)+" at:"+rowkey);           
           }
         }
       } finally {
@@ -178,6 +198,20 @@ public class CalculateSplits extends Configured implements Tool {
     }  
     LOG.info("Processed:"+ count + " sample keys.");    
     LOG.info("Total generated splits:"+ String.format("%04d", splits));
+    
+    Connection connection = ConnectionFactory.createConnection(conf);
+    TableName tName = TableName.valueOf(tableName.getBytes());
+
+    Admin admin = connection.getAdmin();
+    
+    String[] columnFamilies = families.split(":");
+    HTableDescriptor desc = new HTableDescriptor(tableName);
+    for (String cf : columnFamilies) {
+      desc.addFamily(new HColumnDescriptor(Bytes.toBytes(cf)));
+    }  
+    
+    admin.createTable(desc, splitKeys);
+    
     return 0;
 
   }
