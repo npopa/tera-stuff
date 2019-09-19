@@ -58,8 +58,8 @@ public class CalculateSplits extends Configured implements Tool {
       keysPath = cmd.getOptionValue("k");
     }
     
-    if (cmd.hasOption("s")) {
-      regions = Long.parseLong(cmd.getOptionValue("s"));
+    if (cmd.hasOption("r")) {
+      regions = Long.parseLong(cmd.getOptionValue("r"));
     }
 
     if (cmd.hasOption("z")) {
