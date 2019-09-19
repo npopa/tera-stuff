@@ -166,7 +166,7 @@ public class CalculateSplits extends Configured implements Tool {
     LOG.info("Should have a split every:" + splitCount + " samples." );    
     Iterator<ImmutableBytesWritable> itr=sorted.keySet().iterator();
     
-    byte[][] splitKeys = new byte[(int)regions][];
+    byte[][] splitKeys = new byte[(int)regions-1][];
 
     long size=0;
     long count=0;
