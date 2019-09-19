@@ -145,7 +145,7 @@ public class CalculateSplits extends Configured implements Tool {
     sorted.putAll(hm);
     long splitCount=(countTotal/regions);
     long splitSize=(sizeTotal/regions);
-    long splits=1;
+    long splits=0;
     LOG.info("Should have a split every:" + splitCount + " samples." );    
     Iterator<ImmutableBytesWritable> itr=sorted.keySet().iterator();
 
