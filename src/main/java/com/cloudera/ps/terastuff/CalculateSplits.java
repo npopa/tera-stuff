@@ -150,7 +150,8 @@ public class CalculateSplits extends Configured implements Tool {
     Iterator<ImmutableBytesWritable> itr=sorted.keySet().iterator();
 
     long size=0;
-    long count=0;    
+    long count=0;
+    countTotal=0;
     while(itr.hasNext())    
     {    
       ImmutableBytesWritable key=itr.next();  
@@ -163,13 +164,10 @@ public class CalculateSplits extends Configured implements Tool {
 
         while (reader.next(rowkey, value)) {
           //LOG.info("Sample: "+rowkey); 
-          if (count<splitCount){
-            count+=1;
-          } else {
-            
-            LOG.info("--> Split "+ String.format("%04d", splits)+" at:"+rowkey);
+          count+=1;
+          if ((count%splitCount)==0){
             splits+=1;
-            count=0;
+            LOG.info("--> Split "+ String.format("%04d", splits)+" at:"+rowkey);
           }
         }
       } finally {
@@ -178,6 +176,8 @@ public class CalculateSplits extends Configured implements Tool {
         }
       }
     }  
+    LOG.info("Processed:"+ count + " sample keys.");    
+    LOG.info("Total generated splits:"+ String.format("%04d", splits));
     return 0;
 
   }
