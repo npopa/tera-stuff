@@ -161,10 +161,12 @@ public class CalculateSplits extends Configured implements Tool {
         LongWritable value = new LongWritable();          
 
         while (reader.next(rowkey, value)) {
+          System.out.println("  Sample: "+rowkey); 
           if (count<splitCount){
             count+=1;
           } else {
-            System.out.println("Split at:"+rowkey);
+            System.out.println("--> Split at:"+rowkey);
+            count=0;
           }
         }
       } finally {
