@@ -143,13 +143,35 @@ public class CalculateSplits extends Configured implements Tool {
     LOG.info("Sorting based of the first key from each file.");    
     TreeMap<ImmutableBytesWritable, String> sorted = new TreeMap<>();
     sorted.putAll(hm);
+    long splitCount=(countTotal/splits);
+    long splitSize=(sizeTotal/splits);
+    LOG.info("Should have a split every:" + splitCount + " samples." );    
+    Iterator<ImmutableBytesWritable> itr=sorted.keySet().iterator();
 
-    LOG.info("Computing splits:" + (countTotal/splits));    
-    Iterator itr=sorted.keySet().iterator();               
+    long size=0;
+    long count=0;    
     while(itr.hasNext())    
     {    
-      ImmutableBytesWritable key=(ImmutableBytesWritable)itr.next();  
-      System.out.println("Key: "+key+" file:   "+hm.get(key));  
+      ImmutableBytesWritable key=itr.next();  
+      System.out.println("Key: "+key+" file:   "+hm.get(key)); 
+      SequenceFile.Reader reader = null;
+      try {
+        reader = new SequenceFile.Reader(conf, Reader.file(new Path(hm.get(key))), Reader.bufferSize(4096));
+        ImmutableBytesWritable rowkey= new ImmutableBytesWritable();
+        LongWritable value = new LongWritable();          
+
+        while (reader.next(rowkey, value)) {
+          if (count<splitCount){
+            count+=1;
+          } else {
+            System.out.println("Split at:"+rowkey);
+          }
+        }
+      } finally {
+        if (reader != null) {
+          reader.close();
+        }
+      }
     }  
     return 0;
 
