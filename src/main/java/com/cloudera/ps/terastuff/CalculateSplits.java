@@ -156,7 +156,7 @@ public class CalculateSplits extends Configured implements Tool {
       System.out.println("Key: "+key+" file:   "+hm.get(key)); 
       SequenceFile.Reader reader = null;
       try {
-        reader = new SequenceFile.Reader(conf, Reader.file(new Path(hm.get(key))), Reader.bufferSize(4096));
+        reader = new SequenceFile.Reader(conf, Reader.file(new Path(keysPath+"/"+hm.get(key))), Reader.bufferSize(4096));
         ImmutableBytesWritable rowkey= new ImmutableBytesWritable();
         LongWritable value = new LongWritable();          
 
