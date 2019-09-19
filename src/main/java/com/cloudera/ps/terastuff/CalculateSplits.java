@@ -143,8 +143,8 @@ public class CalculateSplits extends Configured implements Tool {
     LOG.info("Sorting based of the first key from each file.");    
     TreeMap<ImmutableBytesWritable, String> sorted = new TreeMap<>();
     sorted.putAll(hm);
-    long splitCount=(countTotal/regions);
-    long splitSize=(sizeTotal/regions);
+    long splitCount=(countTotal/regions)+1;
+    long splitSize=(sizeTotal/regions)+1;
     long splits=0;
     LOG.info("Should have a split every:" + splitCount + " samples." );    
     Iterator<ImmutableBytesWritable> itr=sorted.keySet().iterator();
