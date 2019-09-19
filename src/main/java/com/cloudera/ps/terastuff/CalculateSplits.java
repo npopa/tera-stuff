@@ -31,7 +31,7 @@ public class CalculateSplits extends Configured implements Tool {
   private static final Log LOG = LogFactory.getLog(CalculateSplits.class);
   private Options options = new Options();
   private String keysPath;
-  private long splits=0;
+  private long splitsTotal=0;
   private boolean bySize=false;  
   private boolean byCount=false;   
 
@@ -40,7 +40,7 @@ public class CalculateSplits extends Configured implements Tool {
     options.addOption("k", "keysPath", true, "keysPath");
     options.addOption("c", "byCount", false, "split by record count");  
     options.addOption("z", "bySize", false, "split by size"); 
-    options.addOption("s", "splits", true, "number of splits");     
+    options.addOption("s", "splitsTotal", true, "number of splits");     
     options.addOption("t", "tableName", true, "tableName");
   }
 
@@ -59,7 +59,7 @@ public class CalculateSplits extends Configured implements Tool {
     }
     
     if (cmd.hasOption("s")) {
-      splits = Long.parseLong(cmd.getOptionValue("s"));
+      splitsTotal = Long.parseLong(cmd.getOptionValue("s"));
     }
 
     if (cmd.hasOption("z")) {
@@ -143,8 +143,9 @@ public class CalculateSplits extends Configured implements Tool {
     LOG.info("Sorting based of the first key from each file.");    
     TreeMap<ImmutableBytesWritable, String> sorted = new TreeMap<>();
     sorted.putAll(hm);
-    long splitCount=(countTotal/splits);
-    long splitSize=(sizeTotal/splits);
+    long splitCount=(countTotal/splitsTotal);
+    long splitSize=(sizeTotal/splitsTotal);
+    long splits=1;
     LOG.info("Should have a split every:" + splitCount + " samples." );    
     Iterator<ImmutableBytesWritable> itr=sorted.keySet().iterator();
 
@@ -153,7 +154,7 @@ public class CalculateSplits extends Configured implements Tool {
     while(itr.hasNext())    
     {    
       ImmutableBytesWritable key=itr.next();  
-      System.out.println("Key: "+key+" file:   "+hm.get(key)); 
+      System.out.println("  File:   "+hm.get(key)); 
       SequenceFile.Reader reader = null;
       try {
         reader = new SequenceFile.Reader(conf, Reader.file(new Path(keysPath+"/"+hm.get(key))), Reader.bufferSize(4096));
@@ -165,7 +166,9 @@ public class CalculateSplits extends Configured implements Tool {
           if (count<splitCount){
             count+=1;
           } else {
-            System.out.println("--> Split at:"+rowkey);
+            
+            System.out.println("--> Split +"+splits+" at:"+rowkey);
+            splits+=1;
             count=0;
           }
         }
