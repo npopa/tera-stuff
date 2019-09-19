@@ -154,7 +154,7 @@ public class CalculateSplits extends Configured implements Tool {
     while(itr.hasNext())    
     {    
       ImmutableBytesWritable key=itr.next();  
-      System.out.println("  File:   "+hm.get(key)); 
+      LOG.info("File:   "+hm.get(key)); 
       SequenceFile.Reader reader = null;
       try {
         reader = new SequenceFile.Reader(conf, Reader.file(new Path(keysPath+"/"+hm.get(key))), Reader.bufferSize(4096));
@@ -162,12 +162,12 @@ public class CalculateSplits extends Configured implements Tool {
         LongWritable value = new LongWritable();          
 
         while (reader.next(rowkey, value)) {
-          LOG.info("  Sample: "+rowkey); 
+          //LOG.info("Sample: "+rowkey); 
           if (count<splitCount){
             count+=1;
           } else {
             
-            LOG.info("--> Split "+ String.format("%03d", splits)+" at:"+rowkey);
+            LOG.info("--> Split "+ String.format("%04d", splits)+" at:"+rowkey);
             splits+=1;
             count=0;
           }
