@@ -33,7 +33,7 @@ import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
-import com.cloudera.ps.hbasestuff.SampleKeys.SampleWritable;
+import com.cloudera.ps.hbasestuff.SampleWritable;
 
 public class CalculateSplits extends Configured implements Tool {
   private static final Log LOG = LogFactory.getLog(CalculateSplits.class);
