@@ -37,7 +37,7 @@ public class ShuffleKeys extends Configured implements Tool {
   private String samplePercent="0";
   private String sampleCount="0";
 
-  public static class ShuffleKeysMapper extends Mapper<ImmutableBytesWritable, LongWritable, ImmutableBytesWritable, LongWritable> {
+  public static class ShuffleKeysMapper extends Mapper<ImmutableBytesWritable, LongWritable, LongWritable, ImmutableBytesWritable> {
     private static LongWritable key = new LongWritable(0);   
     private long sp=0;
     private long sc=0;
@@ -141,6 +141,7 @@ public class ShuffleKeys extends Configured implements Tool {
     FileOutputFormat.setOutputPath(job, outputDir);
     
     Path inputDir = new Path(inputPath);
+    job.setMapperClass(ShuffleKeysMapper.class); 
     SequenceFileInputFormat.addInputPath(job, inputDir);
     job.setInputFormatClass(SequenceFileInputFormat.class);    
 
@@ -148,6 +149,7 @@ public class ShuffleKeys extends Configured implements Tool {
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
     job.setOutputKeyClass(ImmutableBytesWritable.class);
     job.setOutputValueClass(LongWritable.class);
+
     
     return job.waitForCompletion(true) ? 0 : 1;
 
