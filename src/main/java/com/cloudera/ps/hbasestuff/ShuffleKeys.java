@@ -24,9 +24,6 @@ import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.TextOutputFormat;
 import org.apache.hadoop.util.*;
-import com.sa.npopa.samples.util.GenerateSampleFilesMR;
-import com.sa.npopa.samples.util.GenerateSampleFilesMR.GenerateSampleFilesMapper;
-import sf.ediscovery.migration.edisco1.eDisco1DLFileLegacyKeysMigration.eDisco1DLFileRowkeyReducer;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
 
