@@ -151,6 +151,10 @@ public class SampleKeys extends Configured implements Tool {
       w.readFields(in);
       return w;
     }
+    
+    public String toString() {
+      return "["+Long.toString(counter)+","+Long.toString(size)+"]";
+    }
   }
   
   
