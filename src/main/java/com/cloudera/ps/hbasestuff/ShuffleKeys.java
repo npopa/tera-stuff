@@ -37,7 +37,7 @@ public class ShuffleKeys extends Configured implements Tool {
   private String samplePercent="0";
   private String sampleCount="0";
 
-  public static class ShuffleKeysMapper extends Mapper<ImmutableBytesWritable, LongWritable, LongWritable, ImmutableBytesWritable> {
+  public static class ShuffleKeysMapper extends Mapper<ImmutableBytesWritable, LongWritable, ImmutableBytesWritable, LongWritable> {
     private static LongWritable key = new LongWritable(0);   
     private long sp=0;
     private long sc=0;
