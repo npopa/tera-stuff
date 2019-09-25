@@ -33,6 +33,7 @@ import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import com.cloudera.ps.hbasestuff.SampleKeys.SampleWritable;
 
 public class CalculateSplits extends Configured implements Tool {
   private static final Log LOG = LogFactory.getLog(CalculateSplits.class);
@@ -179,7 +180,7 @@ public class CalculateSplits extends Configured implements Tool {
       try {
         reader = new SequenceFile.Reader(conf, Reader.file(new Path(keysPath+"/"+hm.get(key))), Reader.bufferSize(4096));
         ImmutableBytesWritable rowkey= new ImmutableBytesWritable();
-        LongWritable value = new LongWritable();          
+        SampleWritable value = new SampleWritable();          
 
         while (reader.next(rowkey, value)) {
           //LOG.info("Sample: "+rowkey); 
