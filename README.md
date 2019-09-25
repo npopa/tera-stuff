@@ -50,20 +50,27 @@ hbase ltt -tn ${TABLE} \
           -write 5:5000 \
           -num_keys 100000
 
-export CLASSPATH=`hadoop classpath`:`hbase mapredcp`:/etc/hbase/conf
+export JAR=/root/tera-stuff/target/tera-stuff.jar
+export CLASSPATH=`hadoop classpath`:`hbase mapredcp`:/etc/hbase/conf:$JAR
 export HADOOP_CLASSPATH=${CLASSPATH}
 
-export KEYS=/tmp/${TABLE}_keys
-export KEYS_RND=/tmp/${TABLE}_keys_rnd
-export KEYS_SIZE=/tmp/${TABLE}_keys_size
-export OUTPUT=/tmp/${TABLE}
-export OUTPUT_RND=/tmp/${TABLE}_random_reads
-export JAR=/root/tera-stuff/target/tera-stuff.jar
+export FLD=$(echo ${TABLE}|sed 's/:/_/')
+export KEYS_SAMPLE=/tmp/${FLD}_sample
+
+export KEYS_RND=/tmp/${FLD}_keys_rnd
+export KEYS10=/tmp/${FLD}_keys10
+export KEYS_RND10=hdfs://nameservice-prod02/tmp/${TABLE}_keys_rnd10
+export KEYS_SIZE=hdfs://nameservice-prod02/tmp/${TABLE}_keys_size
+export OUTPUT=hdfs://nameservice-prod02/tmp/${TABLE}
+export OUTPUT_RND=hdfs://nameservice-prod02/tmp/${TABLE}_random_reads
+export OUTPUT_RND10=hdfs://nameservice-prod02/tmp/${TABLE}_random_reads10
+
+
 kinit -kt $(ls -tr /var/run/cloudera-scm-agent/process/*/hbase.keytab|tail -1) hbase/$(hostname -f)          
 
-
+## Test SCAN workload
 ####regular table export
-hdfs dfs -rmr -skipTrash ${OUTPUT}
+hdfs dfs -rmr -skipTrash ${SCAN}
 hbase org.apache.hadoop.hbase.mapreduce.Export \
    -Dhbase.client.scanner.caching=100 \
    -Dmapreduce.map.speculative=false \
@@ -111,15 +118,15 @@ yarn jar ${JAR} \
 
 ####export table keys and the row sizes.
 ####This can be used to analyze the table later.
-hdfs dfs -rmr -skipTrash ${KEYS_SIZE}
+hdfs dfs -rmr -skipTrash ${KEYS_SAMPLE}
 yarn jar ${JAR} \
-   com.cloudera.ps.terastuff.ExportTableKeys \
+   com.cloudera.ps.terastuff.SampleKeys \
    -Dhbase.client.scanner.caching=100 \
    -Dmapreduce.map.speculative=false \
    -Dmapreduce.reduce.speculative=false \
    -Dmapreduce.job.reduces=0 \
     --tableName ${TABLE} \
-    --outputPath ${KEYS_SIZE} \
+    --outputPath ${KEYS_SAMPLE} \
     --includeRowSize \
     --sampleCount 1000
 

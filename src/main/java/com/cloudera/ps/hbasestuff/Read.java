@@ -1,4 +1,4 @@
-package com.cloudera.ps.terastuff;
+package com.cloudera.ps.hbasestuff;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -38,7 +38,7 @@ import org.apache.hadoop.util.*;
 
 */
 
-public class ExportKeys extends Configured implements Tool {
+public class Read extends Configured implements Tool {
 
 	private Options options = new Options();
 
@@ -47,9 +47,7 @@ public class ExportKeys extends Configured implements Tool {
 	private String tableName;
 	boolean shuffle;
     
-	public static class ExportKeysMapper extends Mapper<ImmutableBytesWritable, LongWritable, ImmutableBytesWritable, Result> {
-
-		private Text rowText = new Text();
+	public static class ReadMapper extends Mapper<ImmutableBytesWritable, LongWritable, ImmutableBytesWritable, Result> {
 
 	        private Connection connection = null;
 	        private Table table = null;
@@ -57,7 +55,7 @@ public class ExportKeys extends Configured implements Tool {
 	        @Override
 	        protected void setup(Context context) throws IOException, InterruptedException {
 	            Configuration conf = context.getConfiguration();
-	            String tableName = conf.get("ExportKeys.tableName");  
+	            String tableName = conf.get("Read.tableName");  
 	            connection = ConnectionFactory.createConnection(context.getConfiguration());
 	            table = connection.getTable(TableName.valueOf(tableName));
 
@@ -72,26 +70,24 @@ public class ExportKeys extends Configured implements Tool {
 		public void map(ImmutableBytesWritable row, LongWritable longValue, Context context)
 				throws IOException, InterruptedException {
 		  
-            List<Get> gets = new ArrayList<Get>();
-            Get get1 = new Get(row.get());
-            gets.add(get1);         
-      		    
-			context.write(row, table.get(get1));
+            Get get = new Get(row.get());              		    
+			context.write(row, table.get(get));
 		}
 	}
 
 	@Override
 	public int run(String[] args) throws Exception {
 
-		init();
+	    String[] otherArgs = new GenericOptionsParser(getConf(), args).getRemainingArgs();
 
-		try {
-			if (!parseOptions(args))
-				return 1;
-		} catch (IOException ex) {
+	    init();
+	    try {
+	      if (!parseOptions(otherArgs))
+	        return 1;
+	    } catch (IOException ex) {
 
-			return 1;
-		}
+	      return 1;
+	    }
 
 		// this should add the hbase configuration to the classpath on the
 		// mappers.
@@ -105,8 +101,8 @@ public class ExportKeys extends Configured implements Tool {
 		// configured, if you're using custom serialization.
 		conf.setStrings("io.serializations",
 				new String[] { conf.get("io.serializations"), ResultSerialization.class.getName() });
-	    conf.set("ExportKeys.tableName", tableName);
-        Job job = Job.getInstance(conf);
+	    conf.set("Read.tableName", tableName);
+	    Job job = Job.getInstance(conf, "Read data for keys " + keysPath + " from " + tableName + " to " + outputPath);
         TableMapReduceUtil.addDependencyJars(job);
 
         // security stuff
@@ -123,9 +119,9 @@ public class ExportKeys extends Configured implements Tool {
 		job.setInputFormatClass(SequenceFileInputFormat.class);
 		FileInputFormat.addInputPath(job, inputDir);
 		FileOutputFormat.setOutputPath(job, outputDir);
-		job.setJobName("ExportKeys");
-		job.setJarByClass(ExportKeys.class);
-		job.setMapperClass(ExportKeysMapper.class);
+		job.setJobName("Read");
+		job.setJarByClass(Read.class);
+		job.setMapperClass(ReadMapper.class);
 		job.setNumReduceTasks(0);
 		job.setOutputFormatClass(SequenceFileOutputFormat.class);
 		job.setOutputKeyClass(ImmutableBytesWritable.class);
@@ -144,7 +140,7 @@ public class ExportKeys extends Configured implements Tool {
 	public boolean parseOptions(String args[]) throws ParseException, IOException {
 		if (args.length == 0) {
 			HelpFormatter formatter = new HelpFormatter();
-			formatter.printHelp("HBaseExportParser", options, true);
+			formatter.printHelp("Read", options, true);
 			return false;
 		}
 		CommandLineParser parser = new PosixParser();
@@ -166,7 +162,7 @@ public class ExportKeys extends Configured implements Tool {
 	}
 
 	public static void main(String[] args) throws Exception {
-		int exitCode = ToolRunner.run(new ExportKeys(), args);
+		int exitCode = ToolRunner.run(new Read(), args);
 		System.exit(exitCode);
 	}
 }

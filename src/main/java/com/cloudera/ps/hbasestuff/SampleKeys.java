@@ -1,5 +1,7 @@
-package com.cloudera.ps.terastuff;
+package com.cloudera.ps.hbasestuff;
 
+import java.io.DataInput;
+import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Random;
 import java.util.UUID;
@@ -30,21 +32,21 @@ import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.*;
 import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.Text;
+import org.apache.hadoop.io.Writable;
 
-public class ExportTableKeys extends Configured implements Tool {
-  private static final Log LOG = LogFactory.getLog(ExportTableKeys.class);
+public class SampleKeys extends Configured implements Tool {
+  private static final Log LOG = LogFactory.getLog(SampleKeys.class);
   private Options options = new Options();
 
   private String outputPath;
   private static String table_name;
-  private boolean shuffle=false;
   private boolean includeLen=false;
-  private boolean useCache=false;
   private String samplePercent="0";
   private String sampleCount="0";
 
-  public static class ExportKeys1Mapper extends TableMapper<ImmutableBytesWritable, LongWritable> {
-    private static LongWritable recordSize = new LongWritable(0);
+  public static class SampleKeysMapper extends TableMapper<ImmutableBytesWritable, SampleWritable> {
+    private static SampleWritable sample = new SampleWritable(0, 0);
+    private static ImmutableBytesWritable rowKey  = new ImmutableBytesWritable();
     private long sp=0;
     private long sc=0;
     private long count=0;  
@@ -53,34 +55,52 @@ public class ExportTableKeys extends Configured implements Tool {
     private boolean skip=false;
     private Random rand = new Random();
     public static enum Counters {
-      ROWS, 
-      SIZE
+      TOTAL_ROWS, 
+      SAMPLED_ROWS,
+      TOTAL_SIZE,
+      SAMPLED_SIZE,     
     }    
 
     @Override
     protected void setup(Context context) throws IOException, InterruptedException {
         Configuration conf = context.getConfiguration();
-        String tableName = conf.get("ExportKeys.tableName");
-        sp=conf.getLong("ExportKeys.samplePercent", 0);
-        sc=conf.getLong("ExportKeys.sampleCount", 0);
-        includeLen=conf.getBoolean("ExportKeys.includeLen", false);
+        String tableName = conf.get("SampleKeys.tableName");
+        sp=conf.getLong("SampleKeys.samplePercent", 0);
+        sc=conf.getLong("SampleKeys.sampleCount", 0);
+        includeLen=conf.getBoolean("SampleKeys.includeLen", false);
         
-        LOG.info("ExportKeys.samplePercent="+sp);
-        LOG.info("ExportKeys.sampleCount="+sc);    
+        LOG.info("SampleKeys.samplePercent="+sp);
+        LOG.info("SampleKeys.sampleCount="+sc);    
     }
 
     @Override
     protected void cleanup(Context context) throws IOException, InterruptedException {
-     
+      context.getCounter(Counters.TOTAL_SIZE).increment(size);
+      context.getCounter(Counters.TOTAL_ROWS).increment(count);     
+      if (skip) { //write the last key/size (if it was not already written)
+        if (includeLen) {
+          sample.set(count, size);
+        } else {
+          sample.set(count, 0);
+        }
+        context.write(rowKey, sample);
+      }
+      
     }    
     
     public void map(ImmutableBytesWritable row, Result record, Context context)
         throws IOException, InterruptedException {
       
+      skip=false; 
+      count+=1;
+      
       size+=Result.getTotalSizeOfCells(record);
       if (includeLen) {
-        recordSize.set(size);
+        sample.set(count, size);
+      } else {
+        sample.set(count, 0);
       }
+      rowKey = row;
       
       if (sp>0){ //skip by percentage
         if(rand.nextInt(100) > sp){
@@ -96,123 +116,75 @@ public class ExportTableKeys extends Configured implements Tool {
             }
       }
       
-      if (!skip){
-        context.write(row, recordSize);
-        
-        context.getCounter(Counters.ROWS).increment(1);
-        context.getCounter(Counters.SIZE).increment(size);
-      }
+      if (count==1) skip=false; //always include the first key
       
-      skip=false;
-      count+=1;         
+      if (!skip){
+        context.write(rowKey, sample);       
+        context.getCounter(Counters.SAMPLED_ROWS).increment(1);
+      }
       
     }
   }
     
-  public static class ExportKeys2Mapper extends TableMapper<Text, ImmutableBytesWritable> {
-    private static Text key = new Text();   
-    private static LongWritable recordSize = new LongWritable(0);
-    private long sp=0;
-    private long sc=0;
-    private long count=0;
-    private boolean skip=false;
-    private Random rand = new Random();
-    public static enum Counters {
-      ROWS, 
-      SIZE
-    }   
-    
-    @Override
-    protected void setup(Context context) throws IOException, InterruptedException {
-        Configuration conf = context.getConfiguration();
-        String tableName = conf.get("ExportKeys.tableName");
-        sp=conf.getLong("ExportKeys.samplePercent", 0);
-        sc=conf.getLong("ExportKeys.sampleCount", 0);       
-        
-        LOG.info("ExportKeys.samplePercent="+sp);
-        LOG.info("ExportKeys.sampleCount="+sc);       
 
+  public static class SampleWritable implements Writable {
+    // Some data
+    private long counter;
+    private long size;
+
+    // Default constructor to allow (de)serialization
+    SampleWritable() { }
+    
+    public SampleWritable(long counter,long size) { set(counter, size); }
+    public void set(long counter,long size) { this.counter = counter; this.size = size; }
+
+    public void write(DataOutput out) throws IOException {
+      out.writeLong(counter);
+      out.writeLong(size);
     }
 
-    @Override
-    protected void cleanup(Context context) throws IOException, InterruptedException {
-     
-    }     
+    public void readFields(DataInput in) throws IOException {
+      counter = in.readLong();
+      size = in.readLong();
+    }
+
+    public static SampleWritable read(DataInput in) throws IOException {
+      SampleWritable w = new SampleWritable();
+      w.readFields(in);
+      return w;
+    }
     
-      public void map(ImmutableBytesWritable row, Result record, Context context)
-          throws IOException, InterruptedException {
-        
-
-        
-        if (sp>0){ //skip by percentage
-          if(rand.nextInt(100) > sp){
-              skip=true;
-              } else {
-              skip=false;
-              }
-        } else if (sc>0){ //skip by count
-          if((count % sc) != 0){
-              skip=true;
-              } else {
-              skip=false;
-              }
-        }
-            
-        if (!skip){
-          key.set(UUID.randomUUID().toString());
-          context.write(key, row);
-          
-          context.getCounter(Counters.ROWS).increment(1);
-        }
-        
-        skip=false;
-        count+=1;       
-
-      }    
+    public String toString() {
+      return "["+Long.toString(counter)+", "+Long.toString(size)+"]";
+    }
   }
   
-  public static class ExportKeysReducer extends Reducer<Text, ImmutableBytesWritable, ImmutableBytesWritable, LongWritable> {
-    private static LongWritable recordSize = new LongWritable(0);
-    public static enum Counters {
-      ROWS, 
-      SIZE
-    } 
-    public void reduce(Text key, Iterable<ImmutableBytesWritable> values, Context context)
-        throws IOException, InterruptedException {
-
-      for (ImmutableBytesWritable k : values) {
-        context.write(k, recordSize);
-        context.getCounter(Counters.ROWS).increment(1);
-        context.getCounter(Counters.SIZE).increment(recordSize.get());        
-      }
-    }
-  }
-
-
+  
   @Override
   public int run(String[] args) throws Exception {
 
-    init();
+    String[] otherArgs = new GenericOptionsParser(getConf(), args).getRemainingArgs();
 
+    init();
     try {
-      if (!parseOptions(args))
+      if (!parseOptions(otherArgs))
         return 1;
     } catch (IOException ex) {
 
       return 1;
     }
+    
     Configuration conf = getConf();
     HBaseConfiguration.merge(conf, HBaseConfiguration.create(conf));
-    conf.set("ExportKeys.tableName", table_name);
-    conf.setBoolean("ExportKeys.shuffle", shuffle);
-    conf.setBoolean("ExportKeys.includeLen", includeLen);
-    conf.set("ExportKeys.samplePercent", samplePercent);
-    conf.set("ExportKeys.sampleCount", sampleCount);
+    conf.set("SampleKeys.tableName", table_name);
+    conf.setBoolean("SampleKeys.includeLen", includeLen);
+    conf.set("SampleKeys.samplePercent", samplePercent);
+    conf.set("SampleKeys.sampleCount", sampleCount);
     
 
     final TableName tableName = TableName.valueOf(table_name);
 
-    Job job = Job.getInstance(conf, "Export keys from table " + table_name + " into file " + outputPath);
+    Job job = Job.getInstance(conf, "SampleKeys from " + table_name + "to " + outputPath);
 
     Path outputDir = new Path(outputPath);
     if (outputDir.getFileSystem(getConf()).exists(outputDir)) {
@@ -220,26 +192,20 @@ public class ExportTableKeys extends Configured implements Tool {
     }
     FileOutputFormat.setOutputPath(job, outputDir);
 
-    job.setJarByClass(ExportTableKeys.class);
+    job.setJarByClass(SampleKeys.class);
     Scan scan = new Scan();
-    scan.setCacheBlocks(useCache);
     
     if(!includeLen){
       scan.setFilter(new KeyOnlyFilter());
     }
     
-    if (!shuffle){ //map only
-      TableMapReduceUtil.initTableMapperJob(tableName, scan, ExportKeys1Mapper.class,
-          ImmutableBytesWritable.class, LongWritable.class, job);
-      //job.setNumReduceTasks(0); //assume this is set externally for now
-    } else { //use reducers
-      TableMapReduceUtil.initTableMapperJob(tableName, scan, ExportKeys2Mapper.class,
-          Text.class, ImmutableBytesWritable.class, job); 
-      job.setReducerClass(ExportKeysReducer.class);
-    }
+    TableMapReduceUtil.initTableMapperJob(tableName, scan, SampleKeysMapper.class,
+          ImmutableBytesWritable.class, SampleWritable.class, job);
+    job.setNumReduceTasks(0); 
+    
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
     job.setOutputKeyClass(ImmutableBytesWritable.class);
-    job.setOutputValueClass(LongWritable.class);    
+    job.setOutputValueClass(SampleWritable.class);    
     return job.waitForCompletion(true) ? 0 : 1;
 
   }
@@ -248,9 +214,7 @@ public class ExportTableKeys extends Configured implements Tool {
 
     options.addOption("o", "outputPath", true, "outputPath");
     options.addOption("t", "tableName", true, "table name ie. table1");
-    options.addOption("s", "shuffle", false, "shuffle");
-    options.addOption("l", "includeRowSize", false, "include row size.");
-    options.addOption("c", "cache", false, "use cache.");    
+    options.addOption("l", "includeRowSize", false, "include row size.");   
     options.addOption("p", "samplePercent", true, "export a just a sample percentage instead of all rows.");
     options.addOption("r", "sampleCount", true, "export a just a sample record every few records instead of all rows.");    
 
@@ -273,10 +237,6 @@ public class ExportTableKeys extends Configured implements Tool {
       table_name = cmd.getOptionValue("t");
     }
     
-    if (cmd.hasOption("s")) {
-      shuffle=true;
-    } 
-    
     if (cmd.hasOption("l")) {
       includeLen=true;
     } 
@@ -289,16 +249,12 @@ public class ExportTableKeys extends Configured implements Tool {
       sampleCount = cmd.getOptionValue("r");
     } 
     
-    if (cmd.hasOption("c")) {
-      useCache=true;
-    } 
-    
     return true;
   }
 
 
   public static void main(String[] args) throws Exception {
-    int exitCode = ToolRunner.run(new ExportTableKeys(), args);
+    int exitCode = ToolRunner.run(new SampleKeys(), args);
     System.exit(exitCode);
   }
 }

@@ -1,4 +1,4 @@
-package com.cloudera.ps.terastuff;
+package com.cloudera.ps.hbasestuff;
 
 import java.io.IOException;
 import java.util.HashMap;
