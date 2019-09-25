@@ -33,6 +33,8 @@ import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.util.GenericOptionsParser;
 import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
+import org.apache.log4j.Level;
+import org.apache.log4j.Logger;
 import com.cloudera.ps.hbasestuff.SampleWritable;
 
 public class CalculateSplits extends Configured implements Tool {
@@ -94,6 +96,10 @@ public class CalculateSplits extends Configured implements Tool {
 
   @Override
   public int run(String[] args) throws Exception {
+    
+    Logger.getLogger("org.apache.zookeeper").setLevel(Level.WARN); //remove ZK annoying logs
+    Logger.getLogger("org.apache.hadoop.hbase.zookeeper").setLevel(Level.WARN);
+    
     String[] otherArgs = new GenericOptionsParser(getConf(), args).getRemainingArgs();
 
     init();
