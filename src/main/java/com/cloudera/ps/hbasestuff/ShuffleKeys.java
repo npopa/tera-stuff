@@ -141,7 +141,9 @@ public class ShuffleKeys extends Configured implements Tool {
     FileOutputFormat.setOutputPath(job, outputDir);
     
     Path inputDir = new Path(inputPath);
-    job.setMapperClass(ShuffleKeysMapper.class); 
+    job.setMapperClass(ShuffleKeysMapper.class);
+    job.setMapOutputKeyClass(LongWritable.class);
+    job.setMapOutputValueClass(ImmutableBytesWritable.class);  
     SequenceFileInputFormat.addInputPath(job, inputDir);
     job.setInputFormatClass(SequenceFileInputFormat.class);    
 
