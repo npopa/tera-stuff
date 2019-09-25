@@ -192,12 +192,12 @@ public class SampleKeys extends Configured implements Tool {
     }
     
     TableMapReduceUtil.initTableMapperJob(tableName, scan, SampleKeys1Mapper.class,
-          ImmutableBytesWritable.class, LongWritable.class, job);
+          ImmutableBytesWritable.class, SampleWritable.class, job);
     job.setNumReduceTasks(0); 
     
     job.setOutputFormatClass(SequenceFileOutputFormat.class);
     job.setOutputKeyClass(ImmutableBytesWritable.class);
-    job.setOutputValueClass(LongWritable.class);    
+    job.setOutputValueClass(SampleWritable.class);    
     return job.waitForCompletion(true) ? 0 : 1;
 
   }
