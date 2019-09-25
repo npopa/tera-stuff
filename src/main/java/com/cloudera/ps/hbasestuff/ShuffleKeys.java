@@ -14,6 +14,7 @@ import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
+import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.hadoop.mapreduce.Job;
 import org.apache.hadoop.mapreduce.Mapper;
 import org.apache.hadoop.mapreduce.Reducer;
@@ -130,6 +131,7 @@ public class ShuffleKeys extends Configured implements Tool {
     
 
     Job job = Job.getInstance(conf, "ShuffleKeys " + inputPath + " to " + outputPath);
+    TableMapReduceUtil.addDependencyJars(job);
     job.setJarByClass(ShuffleKeys.class);
     
     Path outputDir = new Path(outputPath);
