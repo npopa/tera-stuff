@@ -131,7 +131,6 @@ public class Read extends Configured implements Tool {
 	}
 
 	private void init() {
-
 		options.addOption("o", "outputPath", true, "outputPath");
 		options.addOption("k", "keysPath", true, "keysPath");
         options.addOption("t", "tableName", true, "tableName");      
