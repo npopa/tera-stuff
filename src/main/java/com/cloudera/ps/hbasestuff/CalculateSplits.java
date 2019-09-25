@@ -129,7 +129,7 @@ public class CalculateSplits extends Configured implements Tool {
         SequenceFile.Reader reader = null;
         try {
           ImmutableBytesWritable key = new ImmutableBytesWritable();
-          LongWritable value = new LongWritable();
+          SampleWritable value = new SampleWritable();
 
           reader = new SequenceFile.Reader(conf, Reader.file(inFile), Reader.bufferSize(4096));
           LOG.info("Key class: "+reader.getKeyClassName());
@@ -144,7 +144,7 @@ public class CalculateSplits extends Configured implements Tool {
             }
             count+=1;
           }
-          size=value.get();
+          //size=value.get();
           lastKey.set(key.get());
           hm.put(firstKey, inFile.getName());
           countTotal+=count;
