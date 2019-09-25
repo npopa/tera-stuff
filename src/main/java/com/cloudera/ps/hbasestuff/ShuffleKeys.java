@@ -174,7 +174,7 @@ public class ShuffleKeys extends Configured implements Tool {
     }
 
     if (cmd.hasOption("i")) {
-      inputPath = cmd.getOptionValue("t");
+      inputPath = cmd.getOptionValue("i");
     }
     
     if (cmd.hasOption("p")) {
