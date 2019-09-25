@@ -77,7 +77,7 @@ public class SampleKeys extends Configured implements Tool {
     protected void cleanup(Context context) throws IOException, InterruptedException {
       context.getCounter(Counters.TOTAL_SIZE).increment(size);
       
-      if (skip) { //write the last key/size
+      if (skip) { //write the last key/size (if it was not already written)
         if (includeLen) {
           sample.set(count, size);
         } else {
@@ -109,12 +109,14 @@ public class SampleKeys extends Configured implements Tool {
             skip=false;
             }
       } else if (sc>0){ //skip by count
-        if((count % sc) != 1){
+        if((count % sc) != 0){
             skip=true;
             } else {
             skip=false;
             }
       }
+      
+      if (count==1) skip=false; //always include the first key
       
       if (!skip){
         context.write(rowKey, sample);       
@@ -153,7 +155,7 @@ public class SampleKeys extends Configured implements Tool {
     }
     
     public String toString() {
-      return "["+Long.toString(counter)+","+Long.toString(size)+"]";
+      return "["+Long.toString(counter)+", "+Long.toString(size)+"]";
     }
   }
   
