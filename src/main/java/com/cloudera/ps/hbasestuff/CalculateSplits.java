@@ -114,7 +114,7 @@ public class CalculateSplits extends Configured implements Tool {
 
     try {
       FileSystem fs = FileSystem.get(conf);
-      LOG.info("Reading keys from "+keysPath);
+      LOG.info("Reading sample keys from "+keysPath);
       // the second boolean parameter here sets the recursion to true
       RemoteIterator<LocatedFileStatus> fileStatusListIterator =
           fs.listFiles(new Path(keysPath), false);
@@ -130,7 +130,10 @@ public class CalculateSplits extends Configured implements Tool {
         try {
           ImmutableBytesWritable key = new ImmutableBytesWritable();
           LongWritable value = new LongWritable();
+
           reader = new SequenceFile.Reader(conf, Reader.file(inFile), Reader.bufferSize(4096));
+          LOG.info("Key class: "+reader.getKeyClassName());
+          LOG.info("Value class: "+reader.getValueClassName());         
           ImmutableBytesWritable firstKey= new ImmutableBytesWritable();
           ImmutableBytesWritable lastKey= new ImmutableBytesWritable();          
           long size=0;
