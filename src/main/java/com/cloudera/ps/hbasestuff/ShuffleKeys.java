@@ -148,18 +148,6 @@ public class ShuffleKeys extends Configured implements Tool {
     job.setOutputValueClass(LongWritable.class);
     
     return job.waitForCompletion(true) ? 0 : 1;
-    
-    
-
-    FileOutputFormat.setOutputPath(job, outputDir);
-    job.setJobName("GenerateSampleFilesMR");
-    job.setJarByClass(GenerateSampleFilesMR.class);
-    job.setMapperClass(GenerateSampleFilesMapper.class);
-    job.setNumReduceTasks(0);
-    job.setOutputKeyClass(Text.class);
-    job.setOutputValueClass(Text.class);
-    job.setInputFormatClass(TextInputFormat.class);
-    job.setOutputFormatClass(TextOutputFormat.class);
 
   }
 
