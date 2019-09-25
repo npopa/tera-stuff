@@ -17,6 +17,23 @@ public class SampleWritable implements Writable {
     public SampleWritable(long counter,long size) { set(counter, size); }
     public void set(long counter,long size) { this.counter = counter; this.size = size; }
 
+    
+    public long getCounter() {
+      return counter;
+    }
+
+    public void setCounter(long counter) {
+      this.counter = counter;
+    }
+
+    public long getSize() {
+      return size;
+    }
+
+    public void setSize(long size) {
+      this.size = size;
+    }
+
     public void write(DataOutput out) throws IOException {
       out.writeLong(counter);
       out.writeLong(size);

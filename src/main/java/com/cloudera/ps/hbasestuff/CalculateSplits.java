@@ -116,6 +116,7 @@ public class CalculateSplits extends Configured implements Tool {
     
     long sizeTotal=0;
     long countTotal=0;
+    long sampleTotal=0;    
     HashMap<ImmutableBytesWritable, String> hm=new HashMap<ImmutableBytesWritable, String>();  
 
     try {
@@ -138,8 +139,7 @@ public class CalculateSplits extends Configured implements Tool {
           SampleWritable value = new SampleWritable();
 
           reader = new SequenceFile.Reader(conf, Reader.file(inFile), Reader.bufferSize(4096));
-          LOG.info("Key class: "+reader.getKeyClassName());
-          LOG.info("Value class: "+reader.getValueClassName());         
+        
           ImmutableBytesWritable firstKey= new ImmutableBytesWritable();
           ImmutableBytesWritable lastKey= new ImmutableBytesWritable();          
           long size=0;
@@ -150,11 +150,13 @@ public class CalculateSplits extends Configured implements Tool {
             }
             count+=1;
           }
-          //size=value.get();
+          countTotal+=value.getCounter();
+          sizeTotal+=value.getSize();
+          sampleTotal+=count;
+          
           lastKey.set(key.get());
           hm.put(firstKey, inFile.getName());
-          countTotal+=count;
-          sizeTotal+=size;
+
         } finally {
           if (reader != null) {
             reader.close();
@@ -165,12 +167,13 @@ public class CalculateSplits extends Configured implements Tool {
       // TODO Auto-generated catch bloc
       e.printStackTrace();
     }
-    LOG.info("Total sample keys:" + countTotal); 
-    LOG.info("Total approximate size:" + sizeTotal);     
+    LOG.info("Total sample keys:" + sampleTotal); 
+    LOG.info("Total rows:" + countTotal);         
+    LOG.info("Total size:" + sizeTotal);     
     LOG.info("Sorting based of the first key from each file.");    
     TreeMap<ImmutableBytesWritable, String> sorted = new TreeMap<>();
     sorted.putAll(hm);
-    long splitCount=(countTotal/regions)+1;
+    long splitCount=(sampleTotal/regions)+1;
     long splitSize=(sizeTotal/regions)+1;
     long splits=0;
     LOG.info("Should have a split every:" + splitCount + " samples." );    
@@ -192,7 +195,7 @@ public class CalculateSplits extends Configured implements Tool {
         SampleWritable value = new SampleWritable();          
 
         while (reader.next(rowkey, value)) {
-          //LOG.info("Sample: "+rowkey); 
+          LOG.info("Sample: "+rowkey); 
           count+=1;
           if ((count%splitCount)==0){
             splitKeys[(int)splits]=rowkey.get();
