@@ -1,10 +1,7 @@
 package com.cloudera.ps.hbasestuff;
 
-import java.io.DataInput;
-import java.io.DataOutput;
 import java.io.IOException;
 import java.util.Random;
-import java.util.UUID;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.HelpFormatter;
@@ -17,7 +14,6 @@ import org.apache.hadoop.conf.*;
 import org.apache.hadoop.fs.Path;
 import org.apache.hadoop.hbase.HBaseConfiguration;
 import org.apache.hadoop.hbase.TableName;
-import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.client.Result;
 import org.apache.hadoop.hbase.client.Scan;
 import org.apache.hadoop.hbase.filter.KeyOnlyFilter;
@@ -25,14 +21,9 @@ import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.mapreduce.TableMapReduceUtil;
 import org.apache.hadoop.hbase.mapreduce.TableMapper;
 import org.apache.hadoop.mapreduce.Job;
-import org.apache.hadoop.mapreduce.Reducer;
-import org.apache.hadoop.mapreduce.Mapper.Context;
 import org.apache.hadoop.mapreduce.lib.output.FileOutputFormat;
 import org.apache.hadoop.mapreduce.lib.output.SequenceFileOutputFormat;
 import org.apache.hadoop.util.*;
-import org.apache.hadoop.io.LongWritable;
-import org.apache.hadoop.io.Text;
-import org.apache.hadoop.io.Writable;
 
 public class SampleKeys extends Configured implements Tool {
   private static final Log LOG = LogFactory.getLog(SampleKeys.class);
@@ -126,38 +117,6 @@ public class SampleKeys extends Configured implements Tool {
     }
   }
     
-
-  public static class SampleWritable implements Writable {
-    // Some data
-    private long counter;
-    private long size;
-
-    // Default constructor to allow (de)serialization
-    SampleWritable() { }
-    
-    public SampleWritable(long counter,long size) { set(counter, size); }
-    public void set(long counter,long size) { this.counter = counter; this.size = size; }
-
-    public void write(DataOutput out) throws IOException {
-      out.writeLong(counter);
-      out.writeLong(size);
-    }
-
-    public void readFields(DataInput in) throws IOException {
-      counter = in.readLong();
-      size = in.readLong();
-    }
-
-    public static SampleWritable read(DataInput in) throws IOException {
-      SampleWritable w = new SampleWritable();
-      w.readFields(in);
-      return w;
-    }
-    
-    public String toString() {
-      return "["+Long.toString(counter)+", "+Long.toString(size)+"]";
-    }
-  }
   
   
   @Override
