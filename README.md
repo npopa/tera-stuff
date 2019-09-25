@@ -15,15 +15,44 @@ hdfs dfs -chown hbase:hbase /user/hbase
 hdfs dfs -chmod 770 /user/hbase
 
 kinit -kt $(ls -tr /var/run/cloudera-scm-agent/process/*/hbase.keytab|tail -1) hbase/$(hostname -f)  
-hbase ltt -tn TestTable \
-          -write 5:10000 \
-          -num_regions_per_server 5\
+
+export TABLE='default:T'
+
+hbase ltt -tn ${TABLE} \
+          -init_only \
+          -compression SNAPPY \
+          -families 0,1 \
+          -num_regions_per_server 5
+
+cat<<EOF|hbase shell
+#Use the below to set/unset table properties.
+# MAX_FILESIZE - default 10GB
+# SPLIT_POLICY - default org.apache.hadoop.hbase.regionserver.IncreasingToUpperBoundRegionSplitPolicy
+#     - org.apache.hadoop.hbase.regionserver.ConstantSizeRegionSplitPolicy
+#     - org.apache.hadoop.hbase.regionserver.IncreasingToUpperBoundRegionSplitPolicy
+#     - org.apache.hadoop.hbase.regionserver.SteppingSplitPolicy
+# MEMSTORE_FLUSHSIZE - default 128MB
+# COMPACTION_ENABLED
+# FLUSH_POLICY
+# alter '${TABLE}', MAX_FILESIZE => '100000000'
+# alter '${TABLE}', METHOD => 'table_att_unset', NAME => 'MAX_FILESIZE'
+
+alter '${TABLE}', MAX_FILESIZE => '100000000'
+alter '${TABLE}', MEMSTORE_FLUSHSIZE => '20000000'
+alter '${TABLE}', SPLIT_POLICY => 'org.apache.hadoop.hbase.regionserver.ConstantSizeRegionSplitPolicy'
+desc '${TABLE}'
+EOF
+
+
+hbase ltt -tn ${TABLE} \
+          -skip_init \
+          -families 0,1 \
+          -write 5:5000 \
           -num_keys 100000
 
-
-export CLASSPATH=${CLASSPATH}:`hadoop classpath`:`hbase mapredcp`:/etc/hbase/conf
+export CLASSPATH=`hadoop classpath`:`hbase mapredcp`:/etc/hbase/conf
 export HADOOP_CLASSPATH=${CLASSPATH}
-export TABLE=TestTable
+
 export KEYS=/tmp/${TABLE}_keys
 export KEYS_RND=/tmp/${TABLE}_keys_rnd
 export KEYS_SIZE=/tmp/${TABLE}_keys_size
@@ -64,7 +93,7 @@ yarn jar ${JAR} \
     --tableName ${TABLE} \
     --outputPath ${KEYS_RND} \
     --shuffle \
-    --sample 10
+    --samplePercent 10
 
 ####export table keys and the row sizes. Generate ony one file. 
 ####This can be used to analyze the table later.
@@ -91,7 +120,8 @@ yarn jar ${JAR} \
    -Dmapreduce.job.reduces=0 \
     --tableName ${TABLE} \
     --outputPath ${KEYS_SIZE} \
-    --includeRowSize
+    --includeRowSize \
+    --sampleCount 1000
 
 ####Export the table using gets rather than scan. Use the --keysPath as input for the keys to be exported.
 hdfs dfs -rmr -skipTrash ${OUTPUT_RND}
