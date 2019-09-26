@@ -152,7 +152,7 @@ public class CalculateSplits extends Configured implements Tool {
           }
           countTotal+=value.getCounter();
           sizeTotal+=value.getSize();
-          sampleTotal+=count-1;
+          sampleTotal+=count;
           
           lastKey.set(key.get());
           hm.put(firstKey, inFile.getName());
@@ -173,10 +173,11 @@ public class CalculateSplits extends Configured implements Tool {
     LOG.info("Sorting based of the first key from each file.");    
     TreeMap<ImmutableBytesWritable, String> sorted = new TreeMap<>();
     sorted.putAll(hm);
-    long splitCount=(sampleTotal/regions)+1;
+    long splitCount=(countTotal/regions)+1;
     long splitSize=(sizeTotal/regions)+1;
     long splits=0;
-    LOG.info("Should have a split every:" + splitCount + " samples." );    
+    LOG.info("Based on count - should have a split every:" + splitCount + " rows." );  
+    LOG.info("Based on size - should have a split every:" + splitSize + " bytes." );     
     Iterator<ImmutableBytesWritable> itr=sorted.keySet().iterator();
     
     byte[][] splitKeys = new byte[(int)regions-1][];
