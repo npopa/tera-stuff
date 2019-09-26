@@ -198,12 +198,13 @@ public class CalculateSplits extends Configured implements Tool {
 
         while (reader.next(rowkey, value)) {
           count+=value.getCounter();
-          LOG.info("Sample "+String.format("%04d", count)+" "+rowkey); 
+          LOG.info("Rowkey# "+String.format("%04d", count)+" "+rowkey); 
           
-          if ((count%splitCount)==0){
+          if (count>splitCount){
             splitKeys[(int)splits]=rowkey.get();
             splits+=1;
-            LOG.info("--> Split "+ String.format("%04d", splits)+" at:"+rowkey);           
+            LOG.info("--> Split "+ String.format("%04d", splits)+" at:"+rowkey); 
+            count=0;
           }
         }
       } finally {
