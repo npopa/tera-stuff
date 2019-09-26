@@ -210,7 +210,7 @@ public class CalculateSplits extends Configured implements Tool {
             splitKeys[(int)splits]=rowkey.get();
             splits+=1;
             LOG.info("--> Split (bySize) "+ String.format("%04d", splits)+" at:"+rowkey); 
-            count=0;
+            size=0;
           }
           
         }
