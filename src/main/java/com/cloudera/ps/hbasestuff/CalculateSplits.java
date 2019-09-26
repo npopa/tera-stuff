@@ -27,7 +27,6 @@ import org.apache.hadoop.hbase.client.Connection;
 import org.apache.hadoop.hbase.client.ConnectionFactory;
 import org.apache.hadoop.hbase.io.ImmutableBytesWritable;
 import org.apache.hadoop.hbase.util.Bytes;
-import org.apache.hadoop.io.LongWritable;
 import org.apache.hadoop.io.SequenceFile;
 import org.apache.hadoop.io.SequenceFile.Reader;
 import org.apache.hadoop.util.GenericOptionsParser;
@@ -198,14 +197,22 @@ public class CalculateSplits extends Configured implements Tool {
 
         while (reader.next(rowkey, value)) {
           count+=value.getCounter();
+          size+=value.getSize();
           LOG.info("Rowkey# "+String.format("%04d", count)+" "+rowkey); 
           
-          if (count>splitCount){
+          if (byCount && (count>splitCount)){
             splitKeys[(int)splits]=rowkey.get();
             splits+=1;
-            LOG.info("--> Split "+ String.format("%04d", splits)+" at:"+rowkey); 
+            LOG.info("--> Split (byCount) "+ String.format("%04d", splits)+" at:"+rowkey); 
             count=0;
           }
+          if (bySize && (size>splitSize)){
+            splitKeys[(int)splits]=rowkey.get();
+            splits+=1;
+            LOG.info("--> Split (bySize) "+ String.format("%04d", splits)+" at:"+rowkey); 
+            count=0;
+          }
+          
         }
       } finally {
         if (reader != null) {
