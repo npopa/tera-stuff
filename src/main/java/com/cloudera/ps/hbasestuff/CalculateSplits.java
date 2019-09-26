@@ -152,7 +152,7 @@ public class CalculateSplits extends Configured implements Tool {
           }
           countTotal+=value.getCounter();
           sizeTotal+=value.getSize();
-          sampleTotal+=count;
+          sampleTotal+=count-1;
           
           lastKey.set(key.get());
           hm.put(firstKey, inFile.getName());
@@ -195,8 +195,8 @@ public class CalculateSplits extends Configured implements Tool {
         SampleWritable value = new SampleWritable();          
 
         while (reader.next(rowkey, value)) {
-          LOG.info("Sample: "+rowkey); 
           count+=1;
+          LOG.info("Sample "+String.format("%04d", count)+" "+rowkey);          
           if ((count%splitCount)==0){
             splitKeys[(int)splits]=rowkey.get();
             splits+=1;
