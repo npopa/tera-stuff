@@ -148,12 +148,12 @@ public class CalculateSplits extends Configured implements Tool {
             if(count==0){
               firstKey.set(key.get());
             }
-            count+=1;
+            count+=value.getCounter();
+            size+=value.getSize();
           }
-          countTotal+=value.getCounter();
-          sizeTotal+=value.getSize();
-          sampleTotal+=count;
-          
+          countTotal+=count;
+          sizeTotal+=size;
+      
           lastKey.set(key.get());
           hm.put(firstKey, inFile.getName());
 
@@ -178,13 +178,14 @@ public class CalculateSplits extends Configured implements Tool {
     long splits=0;
     LOG.info("Based on count - should have a split every:" + splitCount + " rows." );  
     LOG.info("Based on size - should have a split every:" + splitSize + " bytes." );     
-    Iterator<ImmutableBytesWritable> itr=sorted.keySet().iterator();
+
     
     byte[][] splitKeys = new byte[(int)regions-1][];
-
     long size=0;
     long count=0;
     countTotal=0;
+    
+    Iterator<ImmutableBytesWritable> itr=sorted.keySet().iterator();   
     while(itr.hasNext())    
     {    
       ImmutableBytesWritable key=itr.next();  
@@ -196,8 +197,9 @@ public class CalculateSplits extends Configured implements Tool {
         SampleWritable value = new SampleWritable();          
 
         while (reader.next(rowkey, value)) {
-          count+=1;
-          LOG.info("Sample "+String.format("%04d", count)+" "+rowkey);          
+          count+=value.getCounter();
+          LOG.info("Sample "+String.format("%04d", count)+" "+rowkey); 
+          
           if ((count%splitCount)==0){
             splitKeys[(int)splits]=rowkey.get();
             splits+=1;
