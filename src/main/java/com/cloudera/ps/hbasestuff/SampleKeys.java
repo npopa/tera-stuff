@@ -112,6 +112,10 @@ public class SampleKeys extends Configured implements Tool {
       if (!skip){
         context.write(rowKey, sample);       
         context.getCounter(Counters.SAMPLED_ROWS).increment(1);
+        
+        //reset the counters
+        count=0;
+        size=0;
       }
       
     }
