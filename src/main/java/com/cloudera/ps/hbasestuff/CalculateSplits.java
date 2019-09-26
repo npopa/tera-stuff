@@ -225,7 +225,8 @@ public class CalculateSplits extends Configured implements Tool {
       }
     }  
     LOG.info("Processed: "+ countTotal1 + " keys.");    
-    LOG.info("Generated "+ String.format("%04d", sizeTotal1)+"splits.");
+    LOG.info("Processed: "+ sizeTotal1 + " bytes.");    
+    LOG.info("Generated "+ String.format("%04d", splits)+"splits.");
     
     Connection connection = ConnectionFactory.createConnection(conf);
     TableName tName = TableName.valueOf(tableName.getBytes());
