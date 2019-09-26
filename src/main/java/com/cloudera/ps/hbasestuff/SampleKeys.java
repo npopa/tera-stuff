@@ -44,6 +44,7 @@ public class SampleKeys extends Configured implements Tool {
     private long size=0; 
     private boolean includeLen=false;
     private boolean skip=false;
+    private boolean first=true;   
     private Random rand = new Random();
     public static enum Counters {
       TOTAL_ROWS, 
@@ -107,7 +108,10 @@ public class SampleKeys extends Configured implements Tool {
             }
       }
       
-      if (count==1) skip=false; //always include the first key
+      if (first) { //always include the first key
+        skip=false;
+        first=false;
+      }
       
       if (!skip){
         context.write(rowKey, sample);       
