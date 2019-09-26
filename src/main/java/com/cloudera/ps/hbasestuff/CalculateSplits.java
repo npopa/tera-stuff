@@ -115,7 +115,7 @@ public class CalculateSplits extends Configured implements Tool {
     
     long sizeTotal=0;
     long countTotal=0;
-    long sampleTotal=0;    
+   
     HashMap<ImmutableBytesWritable, String> hm=new HashMap<ImmutableBytesWritable, String>();  
 
     try {
@@ -166,7 +166,7 @@ public class CalculateSplits extends Configured implements Tool {
       // TODO Auto-generated catch bloc
       e.printStackTrace();
     }
-    LOG.info("Total sample keys:" + sampleTotal); 
+
     LOG.info("Total rows:" + countTotal);         
     LOG.info("Total size:" + sizeTotal);     
     LOG.info("Sorting based of the first key from each file.");    
@@ -182,7 +182,9 @@ public class CalculateSplits extends Configured implements Tool {
     byte[][] splitKeys = new byte[(int)regions-1][];
     long size=0;
     long count=0;
-    countTotal=0;
+    long countTotal1=0;
+    long sizeTotal1=0;
+
     
     Iterator<ImmutableBytesWritable> itr=sorted.keySet().iterator();   
     while(itr.hasNext())    
@@ -197,7 +199,9 @@ public class CalculateSplits extends Configured implements Tool {
 
         while (reader.next(rowkey, value)) {
           count+=value.getCounter();
+          countTotal1+=value.getCounter();
           size+=value.getSize();
+          sizeTotal1+=value.getSize();
           LOG.info("Rowkey# "+String.format("%04d", count)+" "+rowkey); 
           
           if (byCount && (count>splitCount)){
@@ -220,8 +224,8 @@ public class CalculateSplits extends Configured implements Tool {
         }
       }
     }  
-    LOG.info("Processed:"+ count + " sample keys.");    
-    LOG.info("Total generated splits:"+ String.format("%04d", splits));
+    LOG.info("Processed: "+ countTotal1 + " keys.");    
+    LOG.info("Generated "+ String.format("%04d", sizeTotal1)+"splits.");
     
     Connection connection = ConnectionFactory.createConnection(conf);
     TableName tName = TableName.valueOf(tableName.getBytes());
